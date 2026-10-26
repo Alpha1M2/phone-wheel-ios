@@ -1,5 +1,6 @@
 name: PhoneWheel
 options:
+  preGenCommand: python3 prepare-assets.py
   bundleIdPrefix: io.phonewheel.personal
   deploymentTarget:
     iOS: '16.4'
@@ -12,9 +13,12 @@ targets:
       - path: WheelViewController.swift
       - path: NativeBridge.js
       - path: index.html
+      - path: Assets.xcassets
+        optional: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.phonewheel.personal.controller
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: '5.0'
         TARGETED_DEVICE_FAMILY: '1'
         CODE_SIGNING_ALLOWED: NO
@@ -29,8 +33,8 @@ targets:
         INFOPLIST_KEY_UIRequiresFullScreen: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        MARKETING_VERSION: '0.1.0'
-        CURRENT_PROJECT_VERSION: '1'
+        MARKETING_VERSION: '0.1.1'
+        CURRENT_PROJECT_VERSION: '2'
     dependencies:
       - sdk: UIKit.framework
       - sdk: WebKit.framework
