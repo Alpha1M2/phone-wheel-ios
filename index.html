@@ -452,6 +452,23 @@
   #shoulderRow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
   #lookBackBtn { grid-column:1; }
 
+
+  /* Reserve the space between the shoulder buttons and utility buttons for status. */
+  #driveTopBar { justify-content:flex-end; }
+  #driveStatus {
+    position:absolute; z-index:3; top:max(6px,var(--wheel-safe-top));
+    left:calc(var(--wheel-safe-left) + min(calc(26 * var(--wheel-vw)),calc(25 * var(--wheel-vh))) + 2 * clamp(68px,calc(20 * var(--wheel-vh)),88px) + 22px);
+    right:calc(var(--wheel-safe-right) + 220px);
+    height:clamp(42px,calc(13 * var(--wheel-vh)),54px); align-items:flex-start;
+    padding:5px 2px; cursor:pointer; overflow:hidden;
+  }
+  #statusDot2 { flex:none; margin-top:3px; }
+  #statusText2 { min-width:0; max-width:none; white-space:normal; overflow-wrap:anywhere; font-size:10px; line-height:1.35; }
+  #connectionDetails { width:min(82vw,620px); max-height:78vh; padding:18px; border:1px solid #435166; border-radius:14px; background:#111820; color:#f2f2f2; }
+  #connectionDetails::backdrop { background:#000b; }
+  #connectionDetails h2 { margin:0 0 12px; font-size:18px; }
+  #connectionDetailsText { margin:0 0 16px; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; font-size:14px; }
+  #connectionDetailsClose { display:block; width:100%; background:#29384b; }
 </style>
 </head>
 <body>
@@ -497,7 +514,7 @@
 <!-- ===================== DRIVE ===================== -->
 <div id="driveScreen">
   <div id="driveTopBar">
-    <div id="driveStatus"><div id="statusDot2" class="live" style="width:8px;height:8px;border-radius:50%;background:var(--ok)"></div><span id="statusText2" data-i18n="driving">Driving</span></div>
+    <div id="driveStatus" role="button" tabindex="0" aria-label="查看完整连接状态" title="点击查看完整连接状态"><div id="statusDot2" class="live" style="width:8px;height:8px;border-radius:50%;background:var(--ok)"></div><span id="statusText2" aria-live="polite" data-i18n="driving">Driving</span></div>
 
     <div class="iconBtns">
       <button class="fullscreenBtn" id="fullscreenBtn2" type="button" hidden></button>
@@ -597,6 +614,11 @@
 </div>
 
 </div>
+<dialog id="connectionDetails" aria-labelledby="connectionDetailsTitle">
+  <h2 id="connectionDetailsTitle">连接状态</h2>
+  <p id="connectionDetailsText"></p>
+  <button id="connectionDetailsClose" type="button">关闭</button>
+</dialog>
 <script>
 /* ---------------------------------------------------------------------
  * i18n
@@ -1273,6 +1295,19 @@ document.querySelectorAll('.angle-preset').forEach(btn => {
 document.querySelectorAll('.lang-preset').forEach(btn => {
   btn.addEventListener('click', () => setLang(btn.dataset.lang));
 });
+
+function showConnectionDetails() {
+  resetQuickPedals(); brakePedal.reset(); throttlePedal.reset();
+  Object.keys(controls).forEach(key=>controls[key]=false);
+  renderPedalReadouts(0,0); sendControlSnapshot(0,0);
+  document.getElementById('connectionDetailsText').textContent = document.getElementById('statusText2').textContent;
+  document.getElementById('connectionDetails').showModal();
+}
+document.getElementById('driveStatus').addEventListener('click', showConnectionDetails);
+document.getElementById('driveStatus').addEventListener('keydown', event => {
+  if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showConnectionDetails(); }
+});
+document.getElementById('connectionDetailsClose').addEventListener('click', () => document.getElementById('connectionDetails').close());
 
 applyTranslations();
 applyAnalogPedalShape();
