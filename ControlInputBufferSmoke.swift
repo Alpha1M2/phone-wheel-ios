@@ -44,6 +44,27 @@ import Foundation
         check(queue.count == 5, "pedal contact/release retained, travel coalesced")
         queue.clear()
 
+        // Each camera edge must survive while throttle and gyro continue updating.
+        for text in [#"{"a":0.4,"t":1,"ll":true}"#,
+                     #"{"a":0.5,"t":1,"ll":true,"lr":true}"#,
+                     #"{"a":0.6,"t":1,"lr":true}"#,
+                     #"{"a":0.7,"t":1}"#] {
+            check(queue.enqueue(text), "camera input accepted")
+        }
+        check(queue.count == 4, "camera press/release edges retained")
+        for expected in [(true, false), (true, true), (false, true), (false, false)] {
+            let frame = decode(queue.popFirst())
+            check(frame["ll"] as? Bool == expected.0 && frame["lr"] as? Bool == expected.1,
+                  "camera held states keep FIFO order")
+            check((frame["t"] as? NSNumber)?.doubleValue == 1, "camera preserves held throttle")
+        }
+        // The new camera bits must not alias either pedal's contact bit.
+        for text in [#"{"ll":true}"#, #"{"t":1}"#, #"{"lr":true}"#, #"{"b":1}"#] {
+            check(queue.enqueue(text), "independent camera/pedal input accepted")
+        }
+        check(queue.count == 4, "camera and pedal bits do not collide")
+        queue.clear()
+
         check(queue.enqueue(#"{"gu":true,"t":1}"#), "queued held controls")
         check(queue.enqueue(" \n { } \n "), "explicit neutral reset")
         check(queue.count == 1, "reset discards unsent control history")
@@ -61,7 +82,8 @@ import Foundation
         let malformed = ["[]", "null", "{", #"{"command":"run"}"#, #"{"a":true}"#,
                          #"{"a":"0"}"#, #"{"gu":1}"#, #"{"gu":"false"}"#,
                          #"{"a":null}"#, #"{"a":1.01}"#, #"{"t":-0.1}"#,
-                         #"{"b":1.1}"#, #"{"a":1e999}"#, String(repeating: " ", count: 8192)]
+                         #"{"b":1.1}"#, #"{"a":1e999}"#, #"{"ll":1}"#, #"{"lr":"false"}"#,
+                         String(repeating: " ", count: 8192)]
         for input in malformed {
             check(queue.enqueue(#"{"gu":true}"#), "seed before invalid input")
             check(!queue.enqueue(input), "reject malformed or unknown input")
@@ -74,6 +96,6 @@ import Foundation
         check(!bounded.enqueue(#"{"gu":true}"#), "overflow requests disconnect")
         check(bounded.count == 0, "overflow does not replay backlog")
 
-        print("PASS: control FIFO edges, held-throttle shifting, latest axes, pedal contact/release, neutral reset, reconnect clear, strict validation and bounded backlog")
+        print("PASS: control FIFO edges, held-throttle shifting and camera controls, latest axes, independent pedal contact/release, neutral reset, reconnect clear, strict validation and bounded backlog")
     }
 }

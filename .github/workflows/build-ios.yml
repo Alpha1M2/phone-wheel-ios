@@ -4,6 +4,31 @@ on:
 permissions:
   contents: read
 jobs:
+  ui-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated WebKit layout test dependencies
+        run: |
+          npm install --no-save --package-lock=false playwright@1.64.1
+          npx playwright install --with-deps webkit
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Verify touch layout and render previews
+        run: node ui-layout-check.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: controller-ui-previews
+          path: ui-preview/
+          if-no-files-found: warn
+          retention-days: 7
   build:
     runs-on: macos-15-intel
     timeout-minutes: 20

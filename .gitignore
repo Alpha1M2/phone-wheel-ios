@@ -8,3 +8,5 @@ package/
 *.p8
 *.pem
 *.key
+node_modules/
+ui-preview/

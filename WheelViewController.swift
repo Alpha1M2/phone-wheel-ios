@@ -149,7 +149,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private func showHapticSettings() {
         guard presentedViewController == nil else { return }
         let alert = UIAlertController(title: "震动设置", message:
-            hapticsEnabled ? "轻背景、油门、刹车与路肩已开启；超出满转角后持续提示。" : "震动反馈已关闭。", preferredStyle: .alert)
+            hapticsEnabled ? "背景、油门、刹车与双段路肩震动已开启；超出满转角后持续提示。" : "震动反馈已关闭。", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: hapticsEnabled ? "关闭震动" : "开启震动", style: .default) { [weak self] _ in
             guard let self = self else { return }
             self.hapticsEnabled.toggle()
@@ -162,7 +162,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         alert.addAction(UIAlertAction(title: "测试满转向提示", style: .default) { [weak self] _ in
             self?.playSteeringLimitCue(force: true)
         })
-        alert.addAction(UIAlertAction(title: "测试路肩震动", style: .default) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "测试路肩 · 双段重震", style: .default) { [weak self] _ in
             self?.playCurbImpact(1, force: true)
         })
         alert.addAction(UIAlertAction(title: "返回", style: .cancel))
@@ -328,22 +328,30 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         let now = ProcessInfo.processInfo.systemUptime
         guard (hapticsEnabled || force), UIApplication.shared.applicationState == .active,
               (socket != nil || force), requestedStrength.isFinite,
-              (force || now >= limitCueUntil), now - lastCurbImpactAt >= 0.1,
+              (force || now >= limitCueUntil), now >= curbCueUntil,
+              now - lastCurbImpactAt >= 0.24,
               CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-        // Match the soft steering-limit texture, at a stronger 0.90...1.00 intensity.
-        let strength = Float(0.9 + 0.1 * min(1, max(0, requestedStrength)))
+        // Two dense, low-sharpness pushes distinguish a curb from the steady pedal layer.
+        // Keep the entire 220 ms cue: repeated telemetry must not cut off its second push.
+        let strength = Float(0.94 + 0.06 * min(1, max(0, requestedStrength)))
         do {
             let engine = try prepareHapticEngine()
-            let event = CHHapticEvent(eventType: .hapticContinuous, parameters: [
-                CHHapticEventParameter(parameterID: .hapticIntensity, value: strength),
-                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.18)
-            ], relativeTime: 0, duration: 0.14)
-            let pattern = try CHHapticPattern(events: [event], parameters: [])
+            let events = [
+                CHHapticEvent(eventType: .hapticContinuous, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: strength),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.22)
+                ], relativeTime: 0, duration: 0.09),
+                CHHapticEvent(eventType: .hapticContinuous, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: strength),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.22)
+                ], relativeTime: 0.115, duration: 0.105)
+            ]
+            let pattern = try CHHapticPattern(events: events, parameters: [])
             let player = try engine.makePlayer(with: pattern)
             try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
             curbPlayer = player
-            // Temporarily duck the pedal/background layer so it cannot sharpen the cue.
-            curbCueUntil = now + 0.14
+            // Stronger contrast without turning the pedal/background layer fully off.
+            curbCueUntil = now + 0.22
             renderRaceFeedback()
             try player.start(atTime: CHHapticTimeImmediate)
             lastCurbImpactAt = now
@@ -356,7 +364,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private func feedbackLayerGain(at now: Double) -> Float {
         if now < limitCueUntil { return 0 }
         // Keep a trace of the held pedal beneath a curb cue instead of silencing it.
-        return now < curbCueUntil ? 0.35 : 1
+        return now < curbCueUntil ? 0.20 : 1
     }
 
     private func playSteeringLimitCue(force: Bool = false) {
@@ -428,7 +436,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             let engine = try prepareHapticEngine()
             let events = [
                 CHHapticEvent(eventType: .hapticContinuous, parameters: [
-                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.12),
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.20),
                     CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.12)
                 ], relativeTime: 0, duration: 0.65),
                 CHHapticEvent(eventType: .hapticContinuous, parameters: [

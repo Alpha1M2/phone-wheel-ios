@@ -697,6 +697,211 @@ button:focus-visible, [role="button"]:focus-visible {
   .face-button, .action-btn, #settingsBtn, .utility-button { transition:none; }
 }
 
+
+/* 0.4.0: industrial papaya cockpit. Functional groups share one clear datum. */
+#driveScreen {
+  --pedal-width:clamp(92px,calc(26 * var(--wheel-vh)),120px);
+  --deck-left:calc(max(14px,var(--wheel-safe-left)) + var(--pedal-width) + 12px);
+  --deck-right:calc(max(14px,var(--wheel-safe-right)) + var(--pedal-width) + 12px);
+  --header-top:max(8px,var(--wheel-safe-top));
+  background:#090c10;
+}
+#driveScreen::before, #driveScreen::after {
+  left:var(--deck-left); right:var(--deck-right); height:1px; background:#4b3b2a;
+}
+#driveScreen::before { top:calc(var(--header-top) + 49px); }
+#driveScreen::after { bottom:max(23px,var(--wheel-safe-bottom)); background:#26303a; }
+#driveTopBar { padding:0; }
+#topAuxButtons {
+  left:var(--deck-left); top:var(--header-top); gap:6px;
+}
+#topAuxButtons .action-btn {
+  width:clamp(67px,calc(22 * var(--wheel-vh)),86px); height:44px;
+  min-height:44px; padding:5px 6px; border-radius:7px;
+  display:grid; grid-template-columns:25px minmax(0,1fr); grid-template-rows:1fr 1fr;
+  column-gap:5px; row-gap:1px; text-align:left;
+  background:#222931; border-color:#46515d; box-shadow:inset 0 1px 0 #ffffff0d;
+}
+#topAuxButtons .shoulder-button::before {
+  grid-row:1 / 3; min-width:25px; width:25px; height:25px;
+  background:#3b454f; border:1px solid #58646f; border-radius:5px;
+  font-size:10px; color:#ffd6a8; box-shadow:none;
+}
+#topAuxButtons .shoulder-button span { font-size:12px; align-self:end; white-space:nowrap; }
+#topAuxButtons .shoulder-button small { font-size:7px; align-self:start; color:#b3bdc8; white-space:nowrap; }
+#topAuxButtons .action-btn.pressed { background:#66421b; border-color:#ff9c31; }
+#driveTopBar .iconBtns {
+  right:var(--deck-right); top:var(--header-top); gap:6px; align-items:stretch;
+}
+#settingsBtn, #gameMenuBtn, #driveTopBar .fullscreenBtn {
+  min-height:44px; height:44px; padding:7px 10px; border-radius:7px;
+  font-size:11px; letter-spacing:0; background:#20262e;
+  border-color:#46515d; box-shadow:inset 0 1px 0 #ffffff0d;
+}
+#settingsBtn { border-color:#b36d23; color:#ffb968; }
+#gameMenuBtn { color:#e0e5eb; }
+#settingsBtn svg { width:17px; height:17px; }
+#driveMid {
+  top:calc(var(--header-top) + 56px); bottom:max(28px,calc(var(--wheel-safe-bottom) + 5px));
+  left:var(--deck-left); right:var(--deck-right); padding:0;
+  display:grid; grid-template-columns:minmax(0,1fr);
+  grid-template-rows:42px 60px minmax(0,1fr); gap:9px;
+  align-items:stretch; justify-content:stretch;
+}
+#instrumentRow { width:100%; min-height:0; gap:12px; align-items:center; }
+.steering-side { align-self:center; }
+.steering-track { height:8px; border:1px solid #59636d; border-radius:2px; background:#1b232b; }
+.steering-fill { background:#ff9b2f; }
+.steering-track::after { opacity:.55; }
+.steering-caption { font-size:9px; line-height:1.1; margin-top:5px; color:#aeb8c4; }
+.steering-center { flex-basis:94px; display:grid; grid-template-columns:28px 1fr; grid-template-rows:23px 12px; gap:0 5px; }
+#miniWheelWrap { width:28px; grid-row:1 / 3; align-self:center; }
+#miniAngle { font-size:16px; line-height:1; align-self:center; text-align:center; min-width:0; }
+#steeringRange { font-size:8px; line-height:1.2; grid-column:2; text-align:center; }
+#telemetryStrip {
+  width:100%; min-height:0; height:60px;
+  grid-template-columns:48px minmax(0,1fr) 67px 72px; gap:10px; padding:7px 10px;
+  border-radius:8px; border:1px solid #505a64; background:#151c23;
+  box-shadow:inset 0 2px 0 #ff8e14;
+}
+.gear-card { padding-right:8px; border-right:1px solid #3c4853; }
+.instrument-label { font-size:7px; letter-spacing:.12em; white-space:nowrap; }
+#gearIndicator { font-size:31px; line-height:1; color:#ffa43e; }
+#speedReadout { font-size:31px; }
+#speedReadout .unit { font-size:8px; margin-top:3px; }
+#rpmBarWrap { height:12px; }
+#rpmLeds { gap:3px; }
+.rpm-led { border-radius:2px; background:#2d3842; border-color:#4c5966; }
+.rpm-caption { font-size:8px; }
+.rpm-instrument { gap:6px; }
+#drsIndicator { min-height:42px; height:42px; border-radius:5px; background:#232c35; border-color:#4c5967; }
+#drsIndicator b { font-size:15px; }
+#drsState { font-size:8px; }
+#telemetryHint { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+#controlDeck {
+  min-height:0; display:grid;
+  grid-template-columns:minmax(88px,.85fr) minmax(128px,1.15fr) minmax(0,2fr);
+  gap:8px; align-items:stretch;
+}
+#shiftStack { order:0; min-height:0; display:grid; grid-template-rows:1fr 1fr; gap:7px; }
+#shiftStack .face-button {
+  min-height:0; padding:8px; width:100%; border-radius:8px;
+  grid-template-columns:28px minmax(0,1fr); grid-template-rows:auto auto; gap:3px 5px;
+  background:#222b33; border:1px solid #4a5967; box-shadow:inset 3px 0 0 var(--pad-color);
+}
+#shiftStack .face-button::before { width:28px; min-width:28px; height:28px; font-size:20px; box-shadow:none; }
+#shiftStack .face-button span { font-size:16px; letter-spacing:0; }
+#shiftStack .face-note { font-size:8px; color:#b9c4cf; }
+#gearUpBtn.pressed { background:#205c43; border-color:#5de5a5; }
+#gearDownBtn.pressed { background:#234d7b; border-color:#8cbdff; }
+/* Broad cardinal keys: no inaccessible center cell, generous vertical and lateral hit areas. */
+#dpadRow {
+  order:0; width:100%; height:100%; min-height:0; aspect-ratio:auto; align-self:stretch;
+  grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr 1fr; gap:5px;
+}
+#dpadRow::after { content:none; }
+#dpadRow .action-btn {
+  min-width:0; min-height:0; padding:0; border-radius:7px; font-size:21px;
+  background:#333f4c; color:#fff; border:1px solid #637485;
+  box-shadow:inset 0 1px 0 #ffffff17,0 2px 0 #030609;
+}
+#dpadUpBtn { grid-row:1; grid-column:1 / -1; }
+#dpadLeftBtn { grid-row:2; grid-column:1; }
+#dpadRightBtn { grid-row:2; grid-column:2; }
+#dpadDownBtn { grid-row:3; grid-column:1 / -1; }
+#dpadRow .action-btn.pressed { color:#16100a; background:#ffa02f; border-color:#ffd18e; box-shadow:inset 0 0 0 1px #ffd18e; }
+#buttonCluster {
+  display:grid; min-width:0; min-height:0; max-width:none; width:100%;
+  grid-template-rows:minmax(0,1.15fr) minmax(0,.85fr); gap:7px;
+}
+#faceButtonRow { min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+#faceButtonRow .face-button {
+  min-height:0; height:100%; padding:6px 3px; gap:3px; border-radius:8px;
+  border-color:#53606d; background:#232c35; box-shadow:inset 0 1px 0 #ffffff0c;
+}
+#faceButtonRow .face-button::before { width:27px; min-width:27px; height:27px; font-size:20px; box-shadow:none; }
+#faceButtonRow .face-button span { font-size:15px; letter-spacing:0; line-height:1.05; }
+#faceButtonRow .face-button .face-note { font-size:8px; line-height:1.1; color:#b7c2ce; }
+#faceButtonRow .face-button.pressed { background:#414d5a; border-color:var(--pad-color); box-shadow:inset 0 0 0 1px var(--pad-color); }
+#shoulderRow { min-height:0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; }
+#shoulderRow .camera-button {
+  min-height:0; height:100%; min-width:0; padding:4px 2px; gap:2px;
+  background:#1b242d; border:1px solid #455463; border-radius:7px;
+  box-shadow:inset 0 1px 0 #ffffff09; display:flex; flex-direction:column; justify-content:center;
+}
+#lookLeftBtn { grid-column:1; }
+#lookBackBtn { grid-column:2; }
+#lookRightBtn { grid-column:3; }
+#shoulderRow .camera-button .look-icon { font-size:19px; line-height:1; font-weight:600; color:#ffad50; }
+#shoulderRow .camera-button span { font-size:12px; line-height:1.1; }
+#shoulderRow .camera-button small { font-size:7px; font-weight:500; line-height:1.1; color:#98a9bb; }
+#shoulderRow .camera-button.pressed { background:#69451f; border-color:#ffad50; }
+#shoulderRow .camera-button.pressed small { color:#ffe0b8; }
+/* Bright matte pedal housings remain identifiable even with the fill at zero. */
+#brakeZone.analog, #throttleZone.analog {
+  width:var(--pedal-width); height:calc(60 * var(--wheel-vh)); border-radius:12px;
+  padding-bottom:16px; border:1px solid #ffffff4d; box-shadow:inset 0 0 0 2px #0002;
+}
+#brakeZone.analog { background:#e33346; }
+#throttleZone.analog { background:#10b875; }
+#brakeZone.analog .pedalFill { background:#ff6571; }
+#throttleZone.analog .pedalFill { background:#43eaa3; }
+#brakeZone.analog::after, #throttleZone.analog::after {
+  content:""; position:absolute; inset:14px 8px auto; height:43%; pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0,transparent calc(25% - 1px),#ffffff33 calc(25% - 1px),#ffffff33 25%);
+  opacity:.65;
+}
+.pedal-btn .pedalLabel { font-size:15px; text-shadow:0 1px 1px #0003; }
+#brakeZone .pedalLabel::before, #throttleZone .pedalLabel::before { font-size:19px; margin-bottom:6px; }
+.pedal-btn .pct { font-size:clamp(28px,calc(8.4 * var(--wheel-vh)),36px); color:#fff; text-shadow:0 1px 2px #0003; }
+#brakeZone.analog.pressed { box-shadow:inset 0 0 0 2px #ffb8c0; }
+#throttleZone.analog.pressed { box-shadow:inset 0 0 0 2px #b2ffdb; }
+.quickPedals button {
+  width:var(--pedal-width); border-radius:11px;
+  border:1px solid #ffffff60; box-shadow:inset 0 -3px 0 #0002;
+}
+#fullBrakeBtn { background:#e33346; color:#fff; }
+#fullThrottleBtn { background:#10b875; color:#fff; }
+#fullBrakeBtn.pressed { background:#ff6571; border-color:#ffc9cf; }
+#fullThrottleBtn.pressed { background:#43eaa3; border-color:#bcffe1; }
+.quickPedals .quick-title { font-size:17px; }
+.quickPedals small { font-size:8px; font-weight:650; opacity:.95; }
+#throttleZone, #throttleZone .pedalLabel, #throttleZone .pct, #fullThrottleBtn {
+  color:#052e20; text-shadow:none;
+}
+#driveStatus {
+  left:var(--deck-left); right:var(--deck-right); bottom:max(3px,var(--wheel-safe-bottom));
+  height:19px; padding:1px 0; border-radius:0; background:none;
+  justify-content:flex-start; color:#adb8c3;
+}
+#statusText2 { font-size:9px; }
+#statusDot2 { width:6px!important; height:6px!important; }
+/* The assist card gets two compact, aligned selector rows, without adding scrolling. */
+#settingsPanel { grid-template-rows:24px minmax(0,1fr) 44px; }
+#settingsPanel button, #settingsPanel #anglePresets button, #settingsPanel .menu-footer button { min-height:44px; }
+#steeringAssistModes, #steeringAssistStrengths { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; }
+#steeringAssistStrengths { margin-top:7px; }
+#settingsPanel #steeringAssistModes button, #settingsPanel #steeringAssistStrengths button { min-height:44px; padding:5px 2px; font-size:11px; }
+#settingsPanel .assist-strength.selected { background:#ff970f; color:#211508; border-color:#ffc778; }
+#settingsPanel .assist-strength:disabled { opacity:.4; }
+#steeringAssistNote { margin-top:7px; font-size:9px; line-height:1.35; }
+@media (max-height:350px), (orientation:portrait) and (max-width:350px) {
+  #driveMid { grid-template-rows:34px 50px minmax(0,1fr); gap:6px; }
+  #telemetryStrip { height:50px; padding:4px 7px; grid-template-columns:39px minmax(0,1fr) 59px 62px; gap:7px; }
+  #gearIndicator, #speedReadout { font-size:27px; }
+  #drsIndicator { height:36px; min-height:36px; }
+  #controlDeck { grid-template-columns:minmax(83px,.85fr) minmax(112px,1.15fr) minmax(0,2fr); gap:6px; }
+  #shiftStack .face-button { padding:5px; grid-template-columns:24px minmax(0,1fr); }
+  #shiftStack .face-button::before, #faceButtonRow .face-button::before { width:24px; min-width:24px; height:24px; font-size:17px; }
+  #shiftStack .face-button span, #faceButtonRow .face-button span { font-size:13px; }
+  #faceButtonRow .face-button { gap:2px; padding:3px; }
+  #shoulderRow .camera-button .look-icon { font-size:16px; }
+  #shoulderRow .camera-button span { font-size:11px; }
+  #shoulderRow .camera-button small { display:none; }
+  #settingsPanel #steeringAssistModes button, #settingsPanel #steeringAssistStrengths button { min-height:28px; font-size:10px; }
+  #steeringAssistNote { font-size:8px; }
+}
+
 </style>
 </head>
 <body>
@@ -794,25 +999,27 @@ button:focus-visible, [role="button"]:focus-visible {
     <div id="telemetryHint">等待游戏遥测 · 转向和踏板可正常使用</div>
 
     <div id="controlDeck">
-      <div id="shiftStack">
-        <div id="gearUpBtn" class="face-button" role="button" tabindex="0" data-pad="A" aria-label="A — Confirm / Gear up"><span data-i18n="gearUp">GEAR UP</span><small class="face-note" data-i18n="noteA"></small></div>
-        <div id="gearDownBtn" class="face-button" role="button" tabindex="0" data-pad="X" aria-label="X — Gear down"><span data-i18n="gearDown">GEAR DOWN</span><small class="face-note" data-i18n="noteX"></small></div>
+      <div id="shiftStack" role="group" aria-label="换挡与确认">
+        <div id="gearUpBtn" class="face-button" role="button" tabindex="0" data-pad="A" aria-label="A，升挡或菜单确认"><span data-i18n="gearUp">升挡 ↑</span><small class="face-note" data-i18n="noteA">菜单确认</small></div>
+        <div id="gearDownBtn" class="face-button" role="button" tabindex="0" data-pad="X" aria-label="X，降挡"><span data-i18n="gearDown">降挡 ↓</span><small class="face-note" data-i18n="noteX">辅助操作</small></div>
+      </div>
+      <div id="dpadRow" role="group" aria-label="菜单方向键">
+        <div id="dpadUpBtn" class="action-btn" role="button" tabindex="0" aria-label="方向键上">▲</div>
+        <div id="dpadLeftBtn" class="action-btn" role="button" tabindex="0" aria-label="方向键左">◀</div>
+        <div id="dpadRightBtn" class="action-btn" role="button" tabindex="0" aria-label="方向键右">▶</div>
+        <div id="dpadDownBtn" class="action-btn" role="button" tabindex="0" aria-label="方向键下">▼</div>
       </div>
       <div id="buttonCluster">
-        <div id="faceButtonRow">
-          <div id="drsPitBtn" class="face-button" role="button" tabindex="0" data-pad="Y" aria-label="Y — DRS / Pit limiter"><span data-i18n="drsPit">DRS / PIT</span><small class="face-note" data-i18n="noteY"></small></div>
-          <div id="mfdBtn" class="face-button" role="button" tabindex="0" data-pad="B" aria-label="B — Back / MFD"><span data-i18n="mfd">MFD</span><small class="face-note" data-i18n="noteB"></small></div>
+        <div id="faceButtonRow" role="group" aria-label="赛车功能">
+          <div id="drsPitBtn" class="face-button" role="button" tabindex="0" data-pad="Y" aria-label="Y，DRS 或维修区限速"><span data-i18n="drsPit">DRS / 限速</span><small class="face-note" data-i18n="noteY">DRS / 维修区</small></div>
+          <div id="mfdBtn" class="face-button" role="button" tabindex="0" data-pad="B" aria-label="B，多功能屏或菜单返回"><span data-i18n="mfd">多功能屏</span><small class="face-note" data-i18n="noteB">菜单返回</small></div>
         </div>
-        <div id="shoulderRow">
-          <div id="lookBackBtn" class="action-btn" role="button" tabindex="0" data-i18n="lookBack">LOOK BACK</div>
+        <div id="shoulderRow" role="group" aria-label="观察周围，按住观察，松开回正">
+          <div id="lookLeftBtn" class="action-btn camera-button" role="button" tabindex="0" aria-label="向左看，按住生效"><b class="look-icon" aria-hidden="true">‹</b><span>左看</span><small>视角</small></div>
+          <div id="lookBackBtn" class="action-btn camera-button" role="button" tabindex="0" aria-label="向后看，按住生效"><b class="look-icon" aria-hidden="true">⌄</b><span data-i18n="lookBack">向后看</span><small>视角</small></div>
+          <div id="lookRightBtn" class="action-btn camera-button" role="button" tabindex="0" aria-label="向右看，按住生效"><b class="look-icon" aria-hidden="true">›</b><span>右看</span><small>视角</small></div>
         </div>
       </div>
-    <div id="dpadRow">
-      <div id="dpadLeftBtn" class="action-btn" role="button" tabindex="0">&#9664;</div>
-      <div id="dpadUpBtn" class="action-btn" role="button" tabindex="0">&#9650;</div>
-      <div id="dpadDownBtn" class="action-btn" role="button" tabindex="0">&#9660;</div>
-      <div id="dpadRightBtn" class="action-btn" role="button" tabindex="0">&#9654;</div>
-    </div>
     </div>
   </div>
 
@@ -840,7 +1047,10 @@ button:focus-visible, [role="button"]:focus-visible {
         <div id="steeringAssistModes">
           <button class="assist-mode" data-assist="off" id="assistOffBtn">关闭</button>
           <button class="assist-mode" data-assist="stable" id="assistStableBtn">高速稳定</button>
-          <button class="assist-mode" data-assist="game" id="assistGameBtn">游戏内辅助 · 设置说明</button>
+          <button class="assist-mode" data-assist="adaptive" id="assistAdaptiveBtn">自适应</button>
+        </div>
+        <div id="steeringAssistStrengths" role="group" aria-label="自适应强度">
+          <button class="assist-strength" id="assistLightBtn">轻</button><button class="assist-strength" id="assistStandardBtn">标准</button><button class="assist-strength" id="assistStrongBtn">强</button>
         </div>
         <div id="steeringAssistNote"></div>
       </section>
@@ -987,44 +1197,82 @@ const wsUrl = `wss://${location.host}/ws`;
 // noise near center.
 const STEER_DEADZONE = 0.012;
 const STEER_CURVE_EXPONENT = 1.15;
-let steeringAssistMode = ['off','stable','game'].includes(localStorage.getItem('steeringAssistMode')) ? localStorage.getItem('steeringAssistMode') : 'off';
+// Assistance changes the spatial response, never delays or predicts a steering sample.
+const savedAssistMode = localStorage.getItem('steeringAssistMode');
+let steeringAssistMode = ['off','stable','adaptive'].includes(savedAssistMode)
+  ? savedAssistMode : savedAssistMode==='game' ? 'adaptive' : 'off';
+if(savedAssistMode==='game') localStorage.setItem('steeringAssistMode',steeringAssistMode);
+const ASSIST_STRENGTHS = {light:0.32,standard:0.50,strong:0.66};
+const ASSIST_STRENGTH_LABELS = {light:'轻',standard:'标准',strong:'强'};
+let steeringAssistStrength = Object.hasOwn(ASSIST_STRENGTHS,localStorage.getItem('steeringAssistStrength'))
+  ? localStorage.getItem('steeringAssistStrength') : 'standard';
 let steeringAssistSpeed = 0;
+let assistTelemetryAt = 0;
+let assistSpeedBlend = 0;
+let assistBlendAt = 0;
+const ASSIST_TELEMETRY_MAX_AGE = 500;
 function updateSteeringAssistMenu() {
-  [['assistOffBtn','off'],['assistStableBtn','stable'],['assistGameBtn','game']].forEach(([id,mode]) => {
-    document.getElementById(id).classList.toggle('selected',steeringAssistMode===mode);
-    document.getElementById(id).setAttribute('aria-pressed',String(steeringAssistMode===mode));
+  [['assistOffBtn','off'],['assistStableBtn','stable'],['assistAdaptiveBtn','adaptive']].forEach(([id,mode]) => {
+    const el=document.getElementById(id);
+    el.classList.toggle('selected',steeringAssistMode===mode);
+    el.setAttribute('aria-pressed',String(steeringAssistMode===mode));
   });
-  document.getElementById('steeringAssistNote').textContent = steeringAssistMode==='stable'
-    ? '高速时收柔中心区域，低速保持原响应；仍可打满方向。无遥测时恢复原响应。'
-    : steeringAssistMode==='game' ? '此选择仅显示设置指引；请在 F1 25 内开启转向辅助，App 无法确认游戏开关。'
-    : '使用原有转向响应。游戏内的驾驶辅助需单独设置。';
+  [['assistLightBtn','light'],['assistStandardBtn','standard'],['assistStrongBtn','strong']].forEach(([id,strength]) => {
+    const el=document.getElementById(id);
+    el.classList.toggle('selected',steeringAssistStrength===strength);
+    el.setAttribute('aria-pressed',String(steeringAssistStrength===strength));
+    el.disabled=steeringAssistMode!=='adaptive';
+  });
+  document.getElementById('steeringAssistNote').textContent = steeringAssistMode==='adaptive'
+    ? '高速细修更稳，大角度恢复直接响应；不增加转向延迟。强度只影响中心区。'
+    : steeringAssistMode==='stable' ? '随车速轻度收柔转向，低速保持原响应；始终可打满方向。'
+    : '保持原有转向手感。辅助不会自动判断路线或替你过弯。';
 }
 function setSteeringAssistMode(mode) {
-  if (!['off','stable','game'].includes(mode)) return;
+  if (!['off','stable','adaptive'].includes(mode)) return;
   steeringAssistMode=mode; localStorage.setItem('steeringAssistMode',mode);
   updateSteeringAssistMenu(); updateSteeringRange();
-  if (mode==='game') showGameAssistGuide();
 }
-function showGameAssistGuide() {
-  detailsOpen=true; feedbackPaused=true; releaseAllInputs();
-  document.getElementById('connectionDetailsTitle').textContent='F1 25 游戏内转向辅助';
-  document.getElementById('connectionDetailsText').textContent='请先暂停游戏，在设置中找到“辅助 / 驾驶辅助（Assists）”，将“转向辅助（Steering Assist）”设为开启。\n\n如果该项不可用，请检查当前驾驶风格或比赛房间是否允许辅助。开启它还会联动刹车辅助、ABS 和牵引力控制。\n\n这里是设置指引，未更改游戏开关；游戏内实际设置以 F1 25 显示为准。';
-  document.getElementById('connectionDetails').showModal();
+function setSteeringAssistStrength(strength) {
+  if (!Object.hasOwn(ASSIST_STRENGTHS,strength)) return;
+  steeringAssistStrength=strength; localStorage.setItem('steeringAssistStrength',strength);
+  updateSteeringAssistMenu(); updateSteeringRange();
+}
+function resetSteeringAssistTelemetry() {
+  steeringAssistSpeed=0; assistTelemetryAt=0;
+  // Preserve the current speed coefficient briefly so packet loss cannot jerk the wheel.
+  // The ordinary sample path smoothly returns it to zero even while other telemetry is stale.
+}
+function steeringAssistSpeedFactor(now=Date.now()) {
+  const fresh=assistTelemetryAt>0 && now>=assistTelemetryAt && now-assistTelemetryAt<=ASSIST_TELEMETRY_MAX_AGE;
+  const progress=fresh?Math.max(0,Math.min(1,(steeringAssistSpeed-50)/210)):0;
+  const target=progress*progress*(3-2*progress);
+  const gap=assistBlendAt?Math.max(0,(now-assistBlendAt)/1000):0;
+  if(gap>1) assistSpeedBlend=0;
+  const dt=Math.min(0.05,gap);
+  assistBlendAt=now;
+  // Only the speed coefficient is slewed (150 ms), not the user's angle.
+  assistSpeedBlend+=(1-Math.exp(-dt/0.15))*(target-assistSpeedBlend);
+  if(assistSpeedBlend<0.00001) assistSpeedBlend=0;
+  return assistSpeedBlend;
 }
 
-// Light low-pass filter (EMA) on the final steering value. Raw accelerometer
-// samples are noisy enough on their own to make fine control impractical;
-// this removes most of that jitter with only a couple of frames of latency.
-// Adaptive filtering is applied once per sensor sample, using elapsed time.
 let steerSmoothed = 0;
 let steeringLockSide = 0;
-
 function applySteerCurve(x) {
-  if (Math.abs(x) < STEER_DEADZONE) return 0;
-  const sign = x < 0 ? -1 : 1;
-  const scaled = (Math.abs(x) - STEER_DEADZONE) / (1 - STEER_DEADZONE);
-  const speedFactor=steeringAssistMode==='stable' ? Math.max(0,Math.min(1,(steeringAssistSpeed-60)/220)) : 0;
-  return sign * Math.pow(scaled, STEER_CURVE_EXPONENT+0.25*speedFactor);
+  if(!Number.isFinite(x)) return 0;
+  const magnitude=Math.min(1,Math.abs(x));
+  const speedFactor=steeringAssistSpeedFactor();
+  const gain=steeringAssistMode==='adaptive'?ASSIST_STRENGTHS[steeringAssistStrength]*speedFactor:0;
+  const deadzone=STEER_DEADZONE+0.010*gain;
+  if(magnitude<=deadzone) return 0;
+  const scaled=(magnitude-deadzone)/(1-deadzone);
+  const exponent=STEER_CURVE_EXPONENT+(steeringAssistMode==='stable'?0.25*speedFactor:0);
+  const base=Math.pow(scaled,exponent);
+  // Monotonic, odd, bounded response: center damping fades continuously to zero at full lock.
+  // d/dx[x*(1-g*(1-x)^2)] >= 1-g > 0, so stronger input always means stronger steering.
+  const assisted=base*(1-gain*(1-base)*(1-base));
+  return (x<0?-1:1)*assisted;
 }
 
 // Prevent the browser's text-selection / long-press context menu from
@@ -1043,7 +1291,7 @@ let running = false;
 
 const controls = {
   gearUp: false, gearDown: false,
-  drsPit: false, overtake: false, lookBack: false,
+  drsPit: false, overtake: false, lookBack: false, lookLeft: false, lookRight: false,
   radio: false, mfd: false, menuStart: false, fullThrottle: false, fullBrake: false,
   dpadUp: false, dpadDown: false, dpadLeft: false, dpadRight: false,
 };
@@ -1093,7 +1341,7 @@ function updateRaceFeedback(throttle, brake) {
   const kerb=allowed && now-feedbackRoad.seenAt<250 && feedbackRoad.speed>5 ? feedbackRoad.kerb : 0;
   // Native curb cues supply the road texture; avoid layering the old sharp rumble on top.
   const road=kerb>0 && typeof window.__nativeCurbImpact!=='function' ? Math.min(0.72, (0.34+0.09*kerb)*Math.min(1,feedbackRoad.speed/90)) : 0;
-  const background=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250 ? 0.12 : 0;
+  const background=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250 ? 0.20 : 0;
   const intensity=Math.min(0.9,background+Math.max(0.34*Math.sqrt(throttle),brake*0.4)+road);
   const sharpness=road>0?0.18:brake>0?0.65:throttle>0?0.22:0.12;
   const frame={intensity,sharpness,roughness:0};
@@ -1113,7 +1361,7 @@ const telemetryStripEl = document.getElementById('telemetryStrip');
 const telemetryHintEl = document.getElementById('telemetryHint');
 const finite = (value, low, high) => Number.isFinite(Number(value)) ? Math.max(low, Math.min(high, Number(value))) : 0;
 function clearTelemetry() {
-  steeringAssistSpeed=0;
+  resetSteeringAssistTelemetry();
   lastCurbImpactAt=0;
   feedbackRoad = {speed:0,kerb:0,seenAt:0};
   telemetryStripEl.classList.add('stale');
@@ -1127,10 +1375,10 @@ function clearTelemetry() {
 function onTelemetry(snapshot) {
   if (snapshot.valid !== true) { clearTelemetry(); return; }
   telemetrySeenAt = Date.now();
-  steeringAssistSpeed=finite(snapshot.spd,0,500);
+  steeringAssistSpeed=finite(snapshot.spd,0,500); assistTelemetryAt=telemetrySeenAt;
   feedbackRoad = {speed:finite(snapshot.spd,0,500),kerb:Array.isArray(snapshot.surfaceTypes)?snapshot.surfaceTypes.slice(0,4).filter(value=>value===1).length:0,seenAt:telemetrySeenAt};
   // Trigger an explicit impact before another asphalt sample can erase a short curb contact.
-  if (feedbackRoad.kerb>0 && feedbackRoad.speed>5 && running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN && telemetrySeenAt-lastCurbImpactAt>=160) {
+  if (feedbackRoad.kerb>0 && feedbackRoad.speed>5 && running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN && telemetrySeenAt-lastCurbImpactAt>=240) {
     lastCurbImpactAt=telemetrySeenAt;
     const strength=Math.min(1,0.65+0.07*feedbackRoad.kerb+0.2*Math.min(1,feedbackRoad.speed/150));
     if (typeof window.__nativeCurbImpact==='function') window.__nativeCurbImpact({strength});
@@ -1411,6 +1659,8 @@ bindHold(document.getElementById('gearDownBtn'), v => controls.gearDown = v);
 bindHold(document.getElementById('drsPitBtn'), v => controls.drsPit = v);
 bindHold(document.getElementById('overtakeBtn'), v => controls.overtake = v);
 bindHold(document.getElementById('lookBackBtn'), v => controls.lookBack = v);
+bindHold(document.getElementById('lookLeftBtn'), v => controls.lookLeft = v);
+bindHold(document.getElementById('lookRightBtn'), v => controls.lookRight = v);
 bindHold(document.getElementById('radioBtn'), v => controls.radio = v);
 bindHold(document.getElementById('mfdBtn'), v => controls.mfd = v);
 bindHold(document.getElementById('dpadUpBtn'), v => controls.dpadUp = v);
@@ -1433,7 +1683,7 @@ function updateSteeringMeter(value) {
 function updateSteeringRange() {
   document.getElementById('steerLeftLimit').textContent = '−' + maxAngleDeg + '° 满幅';
   document.getElementById('steerRightLimit').textContent = '+' + maxAngleDeg + '° 满幅';
-  document.getElementById('steeringRange').textContent = '满转向 ±' + maxAngleDeg + '°' + (steeringAssistMode==='stable' ? ' · 稳定' : '');
+  document.getElementById('steeringRange').textContent = '满转向 ±' + maxAngleDeg + '°' + (steeringAssistMode==='adaptive' ? ' · 自适应 '+ASSIST_STRENGTH_LABELS[steeringAssistStrength] : steeringAssistMode==='stable' ? ' · 稳定' : '');
 }
 
 let lastSteeringCueAt=0;
@@ -1494,6 +1744,8 @@ function sendControlSnapshot(throttleValue, brakeValue) {
       dp: controls.drsPit,
       ot: controls.overtake,
       lb: controls.lookBack,
+      ll: controls.lookLeft,
+      lr: controls.lookRight,
       ra: controls.radio,
       mf: controls.mfd,
       st: controls.menuStart,
@@ -1632,7 +1884,8 @@ document.getElementById('driveStatus').addEventListener('keydown', event => {
 document.getElementById('connectionDetailsClose').addEventListener('click', () => document.getElementById('connectionDetails').close());
 document.getElementById('connectionDetails').addEventListener('close',()=>{detailsOpen=false;feedbackPaused=settingsOpen;releaseAllInputs();});
 
-[['assistOffBtn','off'],['assistStableBtn','stable'],['assistGameBtn','game']].forEach(([id,mode]) => document.getElementById(id).addEventListener('click',()=>setSteeringAssistMode(mode)));
+[['assistOffBtn','off'],['assistStableBtn','stable'],['assistAdaptiveBtn','adaptive']].forEach(([id,mode]) => document.getElementById(id).addEventListener('click',()=>setSteeringAssistMode(mode)));
+[['assistLightBtn','light'],['assistStandardBtn','standard'],['assistStrongBtn','strong']].forEach(([id,strength]) => document.getElementById(id).addEventListener('click',()=>setSteeringAssistStrength(strength)));
 updateSteeringAssistMenu();
 applyTranslations();
 applyAnalogPedalShape();

@@ -6,11 +6,11 @@ import CoreFoundation
 struct ControlInputBuffer {
     private struct Frame {
         let text: String
-        let signature: UInt16
+        let signature: UInt32
         let isReset: Bool
     }
 
-    private static let buttonKeys = ["gu", "gd", "dp", "ot", "lb", "ra", "mf", "st", "du", "dd", "dl", "dr"]
+    private static let buttonKeys = ["gu", "gd", "dp", "ot", "lb", "ra", "mf", "st", "du", "dd", "dl", "dr", "ll", "lr"]
     private static let allowedKeys = Set(["a", "t", "b"] + buttonKeys)
     private let capacity: Int
     private var frames: [Frame] = []
@@ -54,7 +54,7 @@ struct ControlInputBuffer {
         if values.isEmpty { return Frame(text: "{}", signature: 0, isReset: true) }
 
         var sanitized: [String: Any] = [:]
-        var signature: UInt16 = 0
+        var signature: UInt32 = 0
         for (index, key) in ["a", "t", "b"].enumerated() {
             var value = 0.0
             if let supplied = values[key] {
@@ -65,7 +65,7 @@ struct ControlInputBuffer {
             }
             sanitized[key] = value
             // Pedal contact/release is an edge even when the value itself is analog.
-            if index > 0 && value > 0 { signature |= UInt16(1) << (11 + index) }
+            if index > 0 && value > 0 { signature |= UInt32(1) << (buttonKeys.count + index - 1) }
         }
         for (index, key) in buttonKeys.enumerated() {
             var pressed = false
@@ -75,7 +75,7 @@ struct ControlInputBuffer {
                 pressed = number.boolValue
             }
             sanitized[key] = pressed
-            if pressed { signature |= UInt16(1) << index }
+            if pressed { signature |= UInt32(1) << index }
         }
         guard let encoded = try? JSONSerialization.data(withJSONObject: sanitized, options: [.sortedKeys]),
               let output = String(data: encoded, encoding: .utf8) else { return nil }
