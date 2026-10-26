@@ -113,8 +113,9 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             }
             self.endpoint = url
             UserDefaults.standard.set(address, forKey: "computerAddress")
-            self.closeSocket()
-            self.web.evaluateJavaScript("if(typeof stop==='function')stop();", completionHandler: nil)
+            alert?.dismiss(animated: true) { [weak self] in
+                self?.web.evaluateJavaScript("window.__nativeReconnect();", completionHandler: nil)
+            }
         })
         alert.addAction(UIAlertAction(title: "返回", style: .cancel))
         present(alert, animated: true)
@@ -231,7 +232,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         let config = URLSessionConfiguration.ephemeral
         config.urlCache = nil
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
-        config.timeoutIntervalForRequest = 12
+        config.timeoutIntervalForRequest = 60
+        config.timeoutIntervalForResource = 90
         let connectionSession = URLSession(configuration: config, delegate: self,
                                            delegateQueue: OperationQueue.main)
         session = connectionSession

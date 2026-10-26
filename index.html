@@ -517,7 +517,7 @@
 const STRINGS = {
   zh: {
     brand:'手机方向盘', notConnected:'未连接', connected:'已连接',
-    connectionFailed:'连接失败，正在重试', motionDenied:'运动权限未允许',
+    connecting:'正在连接电脑…', connectionFailed:'连接失败，正在重试', motionDenied:'运动权限未允许',
     steeringLabel:'转向', hint:'横屏握稳手机，点击开始，再校准当前姿势为中心。',
     start:'开始驾驶', calibrate:'校准中心', invert:'反转转向', verifyWs:'检查连接页面',
     driving:'驾驶中', gearDown:'降挡', gearUp:'升挡', drsPit:'DRS / 限速',
@@ -852,22 +852,43 @@ function toggleFullscreen() {
   }
 }
 
+let reconnectTimer = null;
 function connect() {
-  ws = new WebSocket(wsUrl);
-  ws.onopen = () => { window.__nativeLastError = ''; setStatus('connected', true); };
-  ws.onclose = () => {
+  clearTimeout(reconnectTimer);
+  const previous = ws;
+  ws = null;
+  if (previous) previous.close();
+  setStatus('connecting', false);
+  const connection = new WebSocket(wsUrl);
+  ws = connection;
+  connection.onopen = () => {
+    if (ws !== connection) return;
+    window.__nativeLastError = '';
+    setStatus('connected', true);
+  };
+  connection.onclose = () => {
+    if (ws !== connection) return;
     resetQuickPedals();
     setStatus('connectionFailed', false);
-    if(window.__nativeLastError) statusTexts.forEach(el=>el.textContent=window.__nativeLastError);
-    if (running) setTimeout(() => { if (running && !document.hidden) connect(); }, 2000);
+    if (window.__nativeLastError) statusTexts.forEach(el => el.textContent = window.__nativeLastError);
+    if (running) reconnectTimer = setTimeout(() => {
+      if (running && !document.hidden && ws === connection) connect();
+    }, 2000);
   };
-  ws.onerror = () => ws.close();
-  ws.onmessage = (event) => {
+  connection.onerror = () => { if (ws === connection) connection.close(); };
+  connection.onmessage = (event) => {
+    if (ws !== connection) return;
     let data;
     try { data = JSON.parse(event.data); } catch { return; }
     onTelemetry(data);
   };
 }
+window.__nativeReconnect = () => {
+  window.__nativeLastError = '';
+  document.getElementById('settingsOverlay').classList.remove('open');
+  if (running) connect();
+  else start();
+};
 
 /* ---------------------------------------------------------------------
  * Steering angle: raw accelerometer gravity-vector angle via atan2, with
@@ -1038,6 +1059,7 @@ async function start() {
 }
 
 function stop() {
+  clearTimeout(reconnectTimer);
   running = false;
   autoCalibratePending = false;
   cancelAnimationFrame(sendFrame);
