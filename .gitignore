@@ -1,0 +1,10 @@
+build/
+package/
+*.ipa
+*.xcodeproj/
+.DS_Store
+*.p12
+*.mobileprovision
+*.p8
+*.pem
+*.key

@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Phone Wheel" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="theme-color" content="#0a0b0d" />
+<meta name="color-scheme" content="dark" />
+<title>Phone Wheel</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0a0b0d;
+    --panel: #16181c;
+    --line: #2a2d33;
+    --accent: #e10600; /* F1 racing red */
+    --accent-glow: rgba(225, 6, 0, 0.55);
+    --throttle: #17c964;
+    --brake: #e10600;
+    --text: #f2f2f2;
+    --text-dim: #7d828a;
+    --ok: #17c964;
+  }
+  * { box-sizing: border-box; -webkit-touch-callout: none; }
+  html, body {
+    margin: 0; height: 100dvh; width: 100vw; overflow: hidden;
+    background: #0a0b0d;
+    overscroll-behavior: none;
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, -apple-system, sans-serif;
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  svg.icon { width: 18px; height: 18px; display: block; }
+
+  /* ===================== SETUP SCREEN ===================== */
+  #setupScreen {
+    height: calc(100 * var(--wheel-vh)); width: calc(100 * var(--wheel-vw));
+    display: grid; grid-template-rows: auto 1fr auto;
+    padding: var(--wheel-safe-top) var(--wheel-safe-right) var(--wheel-safe-bottom) var(--wheel-safe-left);
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px; border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand .stripe { width: 5px; height: 18px; background: var(--accent); border-radius: 2px; }
+  .brand span { font-weight: 800; letter-spacing: 0.08em; font-size: 13px; text-transform: uppercase; color: var(--text-dim); }
+  header .iconBtns { display: flex; align-items: center; gap: 10px; }
+  #status, #driveStatus { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); }
+  #statusDot { width: 8px; height: 8px; border-radius: 50%; background: #555; transition: background 0.2s, box-shadow 0.2s; }
+  #statusDot.live { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+
+  main {
+    display: flex; align-items: center; justify-content: center; gap: calc(6 * var(--wheel-vw));
+    min-height: 0; padding: 4px 12px;
+  }
+  #wheelWrap { position: relative; height: min(calc(30 * var(--wheel-vh)), calc(42 * var(--wheel-vw))); aspect-ratio: 1/1; flex-shrink: 0; }
+  .wheel { width: 100%; height: 100%; filter: drop-shadow(0 0 10px rgba(0,0,0,0.6)); transition: transform 0.03s linear; }
+  .wheel .rim { fill: none; stroke: #3a3d44; stroke-width: 10; }
+  .wheel .spoke { fill: #3a3d44; }
+  .wheel .hub { fill: var(--accent); }
+  .wheel .mark { fill: var(--text-dim); }
+
+  #readout { text-align: left; }
+  #angle { font-size: min(calc(13 * var(--wheel-vw)), 64px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  #angle span { font-size: 0.35em; color: var(--text-dim); font-weight: 600; margin-left: 4px; }
+  #angleLabel { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); margin-top: 4px; }
+  #hint { font-size: 12px; color: var(--text-dim); margin-top: 10px; max-width: calc(46 * var(--wheel-vw)); }
+
+  footer {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+    padding: 10px 12px 12px; border-top: 1px solid var(--line);
+  }
+  button {
+    appearance: none; border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
+    color: var(--text); background: var(--panel);
+  }
+  button:active { transform: scale(0.96); }
+  #startBtn {
+    grid-column: 1 / span 3;
+    background: var(--accent); border-color: var(--accent); color: white;
+    font-size: 16px; text-transform: uppercase; letter-spacing: 0.08em;
+    box-shadow: 0 4px 18px var(--accent-glow);
+  }
+  #secondaryRow { grid-column: 1 / span 3; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+  /* ===================== DRIVE SCREEN ===================== */
+  /* Throttle/brake sit in the bottom corners like typical mobile racing-game
+     controls, inset from the screen edge so they don't collide with the
+     OS edge-swipe gesture area. */
+  #driveScreen {
+    display: none;
+    position: relative;
+    height: calc(100 * var(--wheel-vh)); width: calc(100 * var(--wheel-vw));
+    padding: var(--wheel-safe-top) var(--wheel-safe-right) var(--wheel-safe-bottom) var(--wheel-safe-left);
+  }
+  #driveScreen.active { display: block; }
+
+  #driveTopBar { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px; }
+  #driveTopBar #driveStatus { font-size: 10px; }
+  #driveTopBar .iconBtns { display: flex; gap: 6px; }
+  #settingsBtn, .fullscreenBtn {
+    padding: 8px 12px; line-height: 1; background: var(--panel);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .fullscreenBtn[hidden] { display: none; }
+
+  #driveMid {
+    position: absolute; top: calc(40px + var(--wheel-safe-top));
+    left: var(--wheel-safe-left); right: var(--wheel-safe-right);
+    bottom: var(--wheel-safe-bottom);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(1.1 * var(--wheel-vh));
+    padding: 0 min(calc(30 * var(--wheel-vw)), calc(32 * var(--wheel-vh)));
+  }
+
+  #paddleRow { display: flex; align-items: center; justify-content: center; gap: calc(3 * var(--wheel-vw)); width: 100%; }
+  .paddle {
+    flex: 1; max-width: calc(34 * var(--wheel-vw)); padding: 10px 4px; font-size: 12px; font-weight: 700;
+    text-align: center; letter-spacing: 0.04em; text-transform: uppercase;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; color: var(--text);
+    touch-action: none;
+  }
+  .paddle.pressed { background: #2c3038; border-color: var(--accent); }
+  [data-pad]::before {
+    content: attr(data-pad);
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 24px; height: 24px; padding: 0 5px; margin-right: 7px;
+    border-radius: 50%; background: var(--pad-color, #41464e);
+    color: #fff; font-size: 16px; font-weight: 900; vertical-align: middle;
+    line-height: 1; text-shadow: 0 1px 2px #0008;
+  }
+  [data-pad="A"] { --pad-color: #158b42; }
+  [data-pad="B"] { --pad-color: #ce3030; }
+  [data-pad="X"] { --pad-color: #2469cd; }
+  [data-pad="Y"] { --pad-color: #b58000; }
+  #miniWheelWrap { width: min(calc(14 * var(--wheel-vh)), calc(16 * var(--wheel-vw))); aspect-ratio: 1/1; flex-shrink: 0; }
+  #miniAngle { text-align: center; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+
+  #actionRow, #actionRow2, #dpadRow { display: flex; gap: 5px; width: 100%; }
+  .action-btn {
+    flex: 1; padding: 8px 2px; font-size: 10px; font-weight: 700; text-align: center;
+    letter-spacing: 0.02em; background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
+    color: var(--text); touch-action: none;
+  }
+  .action-btn.pressed { background: var(--accent); border-color: var(--accent); color: white; }
+  #dpadRow .action-btn { font-size: 13px; padding: 7px 2px; }
+
+  /* ---- telemetry strip: live speed/gear/RPM shift-light/DRS from the game ---- */
+  #telemetryStrip { display: flex; align-items: center; gap: 10px; width: 100%; }
+  #gearIndicator {
+    font-size: 26px; font-weight: 900; width: 38px; text-align: center; flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  #rpmBarWrap {
+    flex: 1; height: 14px; background: #1a1c20; border-radius: 7px; overflow: hidden;
+    border: 1px solid var(--line);
+  }
+  #rpmBarFill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #17c964 0%, #ffd23f 65%, var(--accent) 100%);
+    transition: width 0.08s linear;
+  }
+  #rpmBarFill.shift { animation: shiftPulse 0.15s infinite alternate; }
+  @keyframes shiftPulse { from { filter: brightness(1); } to { filter: brightness(1.7); } }
+  #speedReadout {
+    font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  #speedReadout .unit { font-size: 10px; color: var(--text-dim); margin-left: 3px; }
+  #drsIndicator {
+    font-size: 10px; font-weight: 800; padding: 3px 7px; border-radius: 6px;
+    background: var(--panel); color: var(--text-dim); border: 1px solid var(--line); flex-shrink: 0;
+  }
+  #drsIndicator.active { background: #17c964; color: #06210f; border-color: #17c964; }
+
+  .pedal-btn {
+    position: absolute; bottom: max(14px, var(--wheel-safe-bottom));
+    width: min(calc(27 * var(--wheel-vw)), calc(30 * var(--wheel-vh))); height: min(calc(27 * var(--wheel-vw)), calc(30 * var(--wheel-vh))); border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: white;
+    touch-action: none; box-shadow: 0 4px 16px rgba(0,0,0,0.35), inset 0 0 0 2px rgba(255,255,255,0.10);
+    transition: transform 0.08s ease, filter 0.08s ease, width 0.15s ease, height 0.15s ease, border-radius 0.15s ease;
+    overflow: hidden;
+  }
+  .pedal-btn .pct { font-size: 22px; margin-top: 2px; font-variant-numeric: tabular-nums; position: relative; z-index: 1; }
+  .pedal-btn .pedalLabel { position: relative; z-index: 1; }
+  .pedal-btn.pressed { filter: brightness(1.3); transform: scale(0.94); }
+  #brakeZone { left: max(14px, var(--wheel-safe-left)); background: #b91f24; }
+  #throttleZone { right: max(14px, var(--wheel-safe-right)); background: #0b9655; }
+
+  /* Analog mode: a tall narrow bar like a real pedal, with a fill that
+     tracks how far it's pressed. */
+  .pedal-btn.analog {
+    width: min(calc(17 * var(--wheel-vw)), calc(20 * var(--wheel-vh))); height: min(calc(48 * var(--wheel-vh)), calc(52 * var(--wheel-vw))); border-radius: 14px;
+    justify-content: flex-end; padding-bottom: 14px;
+    background: #1c1e22; box-shadow: 0 6px 20px rgba(0,0,0,0.55), inset 0 0 0 2px var(--line);
+  }
+  .pedal-btn.analog.pressed { transform: none; }
+  .pedal-btn.analog .pedalFill {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 0%;
+    transition: height 0.05s linear;
+  }
+  #brakeZone.analog .pedalFill { background: linear-gradient(180deg, #ff5b4f, var(--brake)); }
+  #throttleZone.analog .pedalFill { background: linear-gradient(180deg, #4fe0a0, var(--throttle)); }
+
+  /* ===================== SETTINGS OVERLAY ===================== */
+  #settingsOverlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    align-items: center; justify-content: center; z-index: 10; padding: 10px;
+  }
+  #settingsOverlay.open { display: flex; }
+  #settingsPanel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: min(calc(80 * var(--wheel-vw)), 420px);
+    max-height: 100%; overflow-y: auto;
+  }
+  #settingsPanel button { width: 100%; }
+  #closeSettingsBtn { grid-column: 1 / span 2; background: var(--accent); border-color: var(--accent); color: white; }
+
+  .settingsSectionLabel {
+    grid-column: 1 / span 2; text-align: center; font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-dim); margin-top: 4px;
+  }
+  #anglePresets, #langPresets { grid-column: 1 / span 2; display: flex; gap: 6px; }
+  .angle-preset, .lang-preset {
+    flex: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 2px; font-size: 13px; font-weight: 700; color: var(--text);
+  }
+  .angle-preset.active-preset, .lang-preset.active-preset { background: var(--accent); border-color: var(--accent); color: white; }
+
+  :root {
+    --wheel-vw: 1vw;
+    --wheel-vh: 1dvh;
+    --wheel-safe-top: env(safe-area-inset-top);
+    --wheel-safe-right: env(safe-area-inset-right);
+    --wheel-safe-bottom: env(safe-area-inset-bottom);
+    --wheel-safe-left: env(safe-area-inset-left);
+  }
+  #landscapeRoot {
+    position: fixed; top: 0; left: 0;
+    width: calc(100 * var(--wheel-vw));
+    height: calc(100 * var(--wheel-vh));
+    transform-origin: top left;
+    overflow: hidden;
+    background: #0a0b0d;
+  }
+  @media (orientation: portrait) {
+    :root {
+      --wheel-vw: 1dvh;
+      --wheel-vh: 1vw;
+      --wheel-safe-top: env(safe-area-inset-right);
+      --wheel-safe-right: env(safe-area-inset-bottom);
+      --wheel-safe-bottom: env(safe-area-inset-left);
+      --wheel-safe-left: env(safe-area-inset-top);
+    }
+    #landscapeRoot { left: 100vw; transform: rotate(90deg); }
+    #settingsOverlay { position: absolute; }
+  }
+
+  /* Compact instruments, circular face buttons, and a spatial D-pad. */
+  #driveMid { gap: 8px; padding-inline: min(calc(26 * var(--wheel-vw)), calc(25 * var(--wheel-vh))); }
+  #instrumentRow { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  #miniWheelWrap { width: clamp(30px, calc(10 * var(--wheel-vh)), 46px); }
+  #miniAngle { min-width: 40px; }
+  #controlDeck { display: flex; align-items: center; gap: clamp(12px, calc(3 * var(--wheel-vw)), 36px); width: 100%; }
+  #buttonCluster { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  #faceButtonRow { display: flex; align-items: center; justify-content: space-evenly; gap: 8px; }
+  .face-button {
+    flex: 0 0 auto; width: clamp(48px, calc(16 * var(--wheel-vh)), 72px);
+    aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--pad-color);
+    background: #161a20; color: #f2f2f2;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; touch-action: none; text-align: center;
+    box-shadow: 0 4px 0 #050608; transition: background .08s, transform .08s;
+  }
+  .face-button[data-pad]::before {
+    background: none; color: var(--pad-color); font-size: 26px;
+    height: 28px; min-width: 0; margin: 0; padding: 0;
+  }
+  .face-button span { font-size: 8px; font-weight: 700; line-height: 1.15; max-width: 90%; }
+  .face-button.pressed { background: var(--pad-color); transform: translateY(2px); box-shadow: 0 2px 0 #050608; }
+  .face-button.pressed::before { color: #fff; }
+  #shoulderRow { display: flex; gap: 7px; align-items: stretch; }
+  #shoulderRow .action-btn { min-height: 42px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 5px 3px; }
+  .shoulder-button[data-pad]::before { border-radius: 6px; margin: 0; height: 20px; min-width: 30px; font-size: 12px; }
+  .shoulder-button small { font-size: 9px; color: #aab2c0; }
+  #dpadRow {
+    order: -1;
+    display: grid; flex: 0 0 auto; width: auto; gap: 4px;
+    grid-template-columns: repeat(3, clamp(30px, calc(10 * var(--wheel-vh)), 44px));
+    grid-template-rows: repeat(3, clamp(30px, calc(10 * var(--wheel-vh)), 44px));
+    position: relative;
+  }
+  #dpadRow .action-btn { display: flex; align-items: center; justify-content: center; padding: 0; font-size: 18px; border-radius: 8px; background: #222832; }
+  #dpadRow .action-btn.pressed { background: var(--accent); }
+  #dpadUpBtn { grid-column: 2; grid-row: 1; }
+  #dpadLeftBtn { grid-column: 1; grid-row: 2; }
+  #dpadRightBtn { grid-column: 3; grid-row: 2; }
+  #dpadDownBtn { grid-column: 2; grid-row: 3; }
+  #dpadRow::after { content: ''; grid-column: 2; grid-row: 2; border-radius: 7px; background: #161a20; border: 1px solid #2a2d33; pointer-events: none; }
+  .pedal-btn.analog {
+    height: min(calc(78 * var(--wheel-vh)), calc(100 * var(--wheel-vh) - var(--wheel-safe-top) - var(--wheel-safe-bottom) - 68px));
+    width: min(calc(17 * var(--wheel-vw)), calc(20 * var(--wheel-vh)));
+    border-radius: 18px;
+  }
+  #brakeZone .pedalLabel::before { content: 'LT'; display: block; font-size: 17px; margin-bottom: 6px; }
+  #throttleZone .pedalLabel::before { content: 'RT'; display: block; font-size: 17px; margin-bottom: 6px; }
+  #brakeZone.analog, #throttleZone.analog {
+    height: calc(60 * var(--wheel-vh));
+  }
+
+
+  #faceButtonRow { gap: 8px; align-items: stretch; }
+  .face-button {
+    flex: 1 1 0; width: auto; min-width: 0; aspect-ratio: auto;
+    min-height: 82px; padding: 7px 3px; border-radius: 13px;
+    border: 1px solid #37404c; gap: 4px;
+  }
+  .face-button[data-pad]::before {
+    width: 30px; min-width: 30px; height: 30px; border-radius: 50%;
+    background: var(--pad-color); color: #fff; font-size: 21px;
+  }
+  .face-button span { font-size: 15px; font-weight: 800; max-width: 100%; }
+  .face-button .face-note { font-size: 9px; font-weight: 400; color: #aab2c0; line-height: 1.2; }
+  .face-button.pressed .face-note { color: #fff; }
+  #settingsBtn, .utility-button { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px; font-size: 12px; background: #161a20; border: 1px solid #37404c; border-radius: 9px; color: #f2f2f2; }
+  .utility-button.pressed { background: #a52a31; }
+  #driveMid { gap: 6px; }
+
+  #instrumentRow { width: 100%; gap: 12px; }
+  .steering-side { flex: 1; min-width: 0; }
+  .steering-track {
+    height: 12px; border: 1px solid #536074; border-radius: 4px;
+    position: relative; overflow: hidden; background: #10151b;
+  }
+  .steering-fill { position: absolute; top: 0; bottom: 0; width: 0; background: #45c7f0; }
+  #steerLeftFill { right: 0; }
+  #steerRightFill { left: 0; }
+  .steering-track::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, transparent 0, transparent calc(25% - 1px), #8799af45 calc(25% - 1px), #8799af45 25%);
+  }
+  .steering-caption { display: flex; justify-content: space-between; gap: 4px; margin-top: 5px; font-size: 10px; color: #aab7c8; font-variant-numeric: tabular-nums; }
+  .steering-center { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 0 0 58px; }
+  #steeringRange { font-size: 9px; color: #8996a7; white-space: nowrap; }
+
+  #driveTopBar { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; }
+  #driveTopBar .iconBtns { justify-content: flex-end; }
+  .quickPedals { display: flex; gap: 8px; }
+  .quickPedals button { min-width: 72px; min-height: 34px; padding: 6px 14px; border-radius: 9px; font-size: 14px; font-weight: 800; color: #fff; touch-action: none; }
+  #fullThrottleBtn { background: #16442e; border: 1px solid #31865a; }
+  #fullBrakeBtn { background: #4a1d23; border: 1px solid #9d3a45; }
+  #fullThrottleBtn.pressed { background: #0bae63; }
+  #fullBrakeBtn.pressed { background: #d82939; }
+
+
+  #driveTopBar { display: flex; justify-content: space-between; }
+  .quickPedals { display: contents; }
+  .quickPedals button {
+    position: absolute;
+    bottom: calc(60 * var(--wheel-vh) + max(14px, var(--wheel-safe-bottom)) + 10px);
+    width: min(calc(17 * var(--wheel-vw)), calc(20 * var(--wheel-vh)));
+    min-width: 0; min-height: 0;
+    height: clamp(36px, calc(13 * var(--wheel-vh)), 54px);
+    padding: 4px; border-radius: 12px; z-index: 2;
+  }
+  #fullBrakeBtn { left: max(14px, var(--wheel-safe-left)); }
+  #fullThrottleBtn { right: max(14px, var(--wheel-safe-right)); }
+
+</style>
+</head>
+<body>
+<div id="landscapeRoot">
+
+<!-- ===================== SETUP ===================== -->
+<div id="setupScreen">
+  <header>
+    <div class="brand"><div class="stripe"></div><span data-i18n="brand">Phone Wheel</span></div>
+    <div class="iconBtns">
+      <div id="status"><div id="statusDot"></div><span id="statusText" data-i18n="notConnected">Not connected</span></div>
+      <button class="fullscreenBtn" id="fullscreenBtn1" type="button" hidden></button>
+    </div>
+  </header>
+
+  <main>
+    <div id="wheelWrap">
+      <svg class="wheel" viewBox="0 0 200 200" id="wheel">
+        <circle class="rim" cx="100" cy="100" r="82"/>
+        <rect class="spoke" x="94" y="18" width="12" height="80" rx="6"/>
+        <rect class="spoke" x="94" y="18" width="12" height="80" rx="6" transform="rotate(120 100 100)"/>
+        <rect class="spoke" x="94" y="18" width="12" height="80" rx="6" transform="rotate(240 100 100)"/>
+        <circle class="hub" cx="100" cy="100" r="20"/>
+        <circle class="mark" cx="100" cy="24" r="4"/>
+      </svg>
+    </div>
+    <div id="readout">
+      <div id="angle">0<span>%</span></div>
+      <div id="angleLabel" data-i18n="steeringLabel">Steering</div>
+      <div id="hint" data-i18n="hint">Hold your phone like a wheel (landscape), tap Start, then Calibrate to zero it.</div>
+    </div>
+  </main>
+
+  <footer>
+    <button id="startBtn" data-i18n="start">Start</button>
+    <div id="secondaryRow">
+      <button id="calBtn" data-i18n="calibrate">Calibrate</button>
+      <button id="invertBtn" data-i18n="invert">Invert</button>
+      <button id="certBtn" data-i18n="verifyWs">Verify WS</button>
+    </div>
+  </footer>
+</div>
+
+<!-- ===================== DRIVE ===================== -->
+<div id="driveScreen">
+  <div id="driveTopBar">
+    <div id="driveStatus"><div id="statusDot2" class="live" style="width:8px;height:8px;border-radius:50%;background:var(--ok)"></div><span id="statusText2" data-i18n="driving">Driving</span></div>
+
+    <div class="iconBtns">
+      <button class="fullscreenBtn" id="fullscreenBtn2" type="button" hidden></button>
+      <button id="gameMenuBtn" class="utility-button" type="button" aria-label="Xbox Start / 菜单暂停"><b>☰</b><span data-i18n="gameMenu">菜单 / 暂停</span></button>
+      <button id="settingsBtn" type="button"></button>
+    </div>
+  </div>
+
+  <div id="driveMid">
+    <div id="instrumentRow">
+      <div class="steering-side">
+        <div id="steerLeftTrack" class="steering-track" role="meter" aria-label="左转摇杆偏转" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="steerLeftFill" class="steering-fill"></div></div>
+        <div class="steering-caption"><span id="steerLeftLimit">−90° 满幅</span><span id="steerLeftValue">左 0%</span></div>
+      </div>
+      <div class="steering-center">
+      <div id="miniWheelWrap">
+        <svg class="wheel" viewBox="0 0 200 200" id="miniWheel">
+          <circle class="rim" cx="100" cy="100" r="82"/>
+          <rect class="spoke" x="94" y="18" width="12" height="80" rx="6"/>
+          <rect class="spoke" x="94" y="18" width="12" height="80" rx="6" transform="rotate(120 100 100)"/>
+          <rect class="spoke" x="94" y="18" width="12" height="80" rx="6" transform="rotate(240 100 100)"/>
+          <circle class="hub" cx="100" cy="100" r="20"/>
+          <circle class="mark" cx="100" cy="24" r="4"/>
+        </svg>
+      </div>
+      <div id="miniAngle">0%</div>
+      <div id="steeringRange">满转向 ±90°</div>
+      </div>
+      <div class="steering-side">
+        <div id="steerRightTrack" class="steering-track" role="meter" aria-label="右转摇杆偏转" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="steerRightFill" class="steering-fill"></div></div>
+        <div class="steering-caption"><span id="steerRightValue">右 0%</span><span id="steerRightLimit">+90° 满幅</span></div>
+      </div>
+    </div>
+    <div id="telemetryStrip">
+      <div id="gearIndicator">N</div>
+      <div id="rpmBarWrap"><div id="rpmBarFill"></div></div>
+      <div id="speedReadout"><span id="speedValue">0</span><span class="unit">km/h</span></div>
+      <div id="drsIndicator">DRS</div>
+    </div>
+
+    <div id="controlDeck">
+      <div id="buttonCluster">
+        <div id="faceButtonRow">
+          <div id="gearDownBtn" class="face-button" role="button" tabindex="0" data-pad="X" aria-label="X — Gear down"><span data-i18n="gearDown">GEAR DOWN</span><small class="face-note" data-i18n="noteX"></small></div>
+          <div id="drsPitBtn" class="face-button" role="button" tabindex="0" data-pad="Y" aria-label="Y — DRS / Pit limiter"><span data-i18n="drsPit">DRS / PIT</span><small class="face-note" data-i18n="noteY"></small></div>
+          <div id="mfdBtn" class="face-button" role="button" tabindex="0" data-pad="B" aria-label="B — Back / MFD"><span data-i18n="mfd">MFD</span><small class="face-note" data-i18n="noteB"></small></div>
+          <div id="gearUpBtn" class="face-button" role="button" tabindex="0" data-pad="A" aria-label="A — Confirm / Gear up"><span data-i18n="gearUp">GEAR UP</span><small class="face-note" data-i18n="noteA"></small></div>
+        </div>
+        <div id="shoulderRow">
+          <div id="overtakeBtn" class="action-btn shoulder-button" role="button" tabindex="0" data-pad="LB" aria-label="Left bumper — Overtake"><span data-i18n="overtake">OVERTAKE</span><small data-i18n="leftShoulder">左肩键</small></div>
+          <div id="lookBackBtn" class="action-btn" role="button" tabindex="0" data-i18n="lookBack">LOOK BACK</div>
+          <div id="radioBtn" class="action-btn shoulder-button" role="button" tabindex="0" data-pad="RB" aria-label="Right bumper — Radio"><span data-i18n="radio">RADIO</span><small data-i18n="rightShoulder">右肩键</small></div>
+        </div>
+      </div>
+    <div id="dpadRow">
+      <div id="dpadLeftBtn" class="action-btn" role="button" tabindex="0">&#9664;</div>
+      <div id="dpadUpBtn" class="action-btn" role="button" tabindex="0">&#9650;</div>
+      <div id="dpadDownBtn" class="action-btn" role="button" tabindex="0">&#9660;</div>
+      <div id="dpadRightBtn" class="action-btn" role="button" tabindex="0">&#9654;</div>
+    </div>
+    </div>
+  </div>
+
+    <div class="quickPedals">
+      <button id="fullThrottleBtn" type="button" aria-label="按住满油，松手归零">满油</button>
+      <button id="fullBrakeBtn" type="button" aria-label="按住全刹车，松手归零">全刹车</button>
+    </div>
+  <div id="brakeZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="brake">Brake</span><span class="pct">0%</span></div>
+  <div id="throttleZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="throttle">Throttle</span><span class="pct">0%</span></div>
+</div>
+
+<!-- ===================== SETTINGS OVERLAY (drive mode) ===================== -->
+<div id="settingsOverlay">
+  <div id="settingsPanel">
+    <button id="calBtn2" data-i18n="calibrate">Calibrate</button>
+    <button id="invertBtn2" data-i18n="invert">Invert</button>
+    <button id="analogBtn">Analog Pedals: On</button>
+    <button id="certBtn2" data-i18n="verifyWs">Verify WS</button>
+
+    <div class="settingsSectionLabel" data-i18n="steeringAngleLabel">Steering Angle (each way)</div>
+    <div id="anglePresets">
+      <button class="angle-preset" data-angle="45">45&deg;</button>
+      <button class="angle-preset" data-angle="60">60&deg;</button>
+      <button class="angle-preset" data-angle="90">90&deg;</button>
+      <button class="angle-preset" data-angle="120">120&deg;</button>
+    </div>
+
+
+    <button id="stopBtn" data-i18n="stop">Stop</button>
+    <button id="closeSettingsBtn" data-i18n="close">Close</button>
+  </div>
+</div>
+
+</div>
+<script>
+/* ---------------------------------------------------------------------
+ * i18n
+ * ------------------------------------------------------------------- */
+const STRINGS = {
+  zh: {
+    brand:'手机方向盘', notConnected:'未连接', connected:'已连接',
+    connectionFailed:'连接失败，正在重试', motionDenied:'运动权限未允许',
+    steeringLabel:'转向', hint:'横屏握稳手机，点击开始，再校准当前姿势为中心。',
+    start:'开始驾驶', calibrate:'校准中心', invert:'反转转向', verifyWs:'检查连接页面',
+    driving:'驾驶中', gearDown:'降挡', gearUp:'升挡', drsPit:'DRS / 限速',
+    overtake:'超车', lookBack:'向后看', radio:'无线电', mfd:'多功能屏',
+    brake:'刹车', throttle:'油门', steeringAngleLabel:'转向角度（单侧）',
+    analogPedalsOn:'模拟踏板：开启', analogPedalsOff:'模拟踏板：关闭',
+    language:'语言', stop:'停止驾驶', close:'关闭设置', settings:'方向盘设置',
+    gameMenu:'菜单 / 暂停', 
+    leftShoulder:'左肩键', rightShoulder:'右肩键', noteX:'辅助操作',
+    noteY:'DRS / 维修区', noteB:'菜单返回', noteA:'菜单确认',
+  },
+  en: {
+    settings:'Wheel settings', gameMenu:'Menu / Pause',  leftShoulder:'Left bumper', rightShoulder:'Right bumper', noteX:'Secondary', noteY:'DRS / Pit', noteB:'Menu back', noteA:'Menu confirm',
+    brand: 'Phone Wheel',
+    notConnected: 'Not connected',
+    connected: 'Connected',
+    connectionFailed: 'Connection failed — tap Verify WS',
+    motionDenied: 'Motion permission denied',
+    steeringLabel: 'Steering',
+    hint: 'Hold your phone like a wheel (landscape), tap Start, then Calibrate to zero it.',
+    start: 'Start',
+    calibrate: 'Calibrate',
+    invert: 'Invert',
+    verifyWs: 'Verify WS',
+    driving: 'Driving',
+    gearDown: '◀ GEAR',
+    gearUp: 'GEAR ▶',
+    drsPit: 'DRS / PIT',
+    overtake: 'OVERTAKE',
+    lookBack: 'LOOK BACK',
+    radio: 'RADIO',
+    mfd: 'MFD',
+    brake: 'Brake',
+    throttle: 'Throttle',
+    steeringAngleLabel: 'Steering Angle (each way)',
+    analogPedalsOn: 'Analog Pedals: On',
+    analogPedalsOff: 'Analog Pedals: Off',
+    language: 'Language',
+    stop: 'Stop',
+    close: 'Close',
+  },
+  tr: {
+    brand: 'Telefon Direksiyon',
+    notConnected: 'Bağlı değil',
+    connected: 'Bağlandı',
+    connectionFailed: 'Bağlanamadı — WS Onayla\'ya bas',
+    motionDenied: 'Hareket izni reddedildi',
+    steeringLabel: 'Direksiyon',
+    hint: 'Telefonu direksiyon gibi yatay tut, Başlat\'a bas, Kalibre Et ile sıfırla.',
+    start: 'Başlat',
+    calibrate: 'Kalibre',
+    invert: 'Ters Çevir',
+    verifyWs: 'WS Onayla',
+    driving: 'Sürüş modu',
+    gearDown: '◀ VİTES',
+    gearUp: 'VİTES ▶',
+    drsPit: 'DRS / PIT',
+    overtake: 'OVERTAKE',
+    lookBack: 'ARKAYA BAK',
+    radio: 'RADIO',
+    mfd: 'MFD',
+    brake: 'Fren',
+    throttle: 'Gaz',
+    steeringAngleLabel: 'Direksiyon Açısı (her yöne)',
+    analogPedalsOn: 'Analog Gaz/Fren: Açık',
+    analogPedalsOff: 'Analog Gaz/Fren: Kapalı',
+    language: 'Dil',
+    stop: 'Durdur',
+    close: 'Kapat',
+  },
+};
+
+let lang = 'zh';
+
+function t(key) {
+  return (STRINGS[lang] && STRINGS[lang][key]) || STRINGS.en[key] || key;
+}
+
+function updateLangButtons() {
+  document.querySelectorAll('.lang-preset').forEach(btn => {
+    btn.classList.toggle('active-preset', btn.dataset.lang === lang);
+  });
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.title = t('brand');
+  document.documentElement.lang = lang;
+  document.getElementById('analogBtn').textContent = t(analogPedals ? 'analogPedalsOn' : 'analogPedalsOff');
+  updateLangButtons();
+  setStatus(currentStatusKey, currentStatusLive);
+}
+
+function setLang(next) {
+  lang = next;
+  localStorage.setItem('phoneWheelLangV2', lang);
+  applyTranslations();
+}
+
+/* ---------------------------------------------------------------------
+ * Icons (inline SVG, Material Symbols outline paths)
+ * ------------------------------------------------------------------- */
+const ICON_SETTINGS = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14,12.94c0.04,-0.3,0.06,-0.61,0.06,-0.94c0,-0.32,-0.02,-0.64,-0.07,-0.94l2.03,-1.58c0.18,-0.14,0.23,-0.41,0.12,-0.61l-1.92,-3.32c-0.12,-0.22,-0.37,-0.29,-0.59,-0.22l-2.39,0.96c-0.5,-0.38,-1.03,-0.7,-1.62,-0.94L14.4,2.81c-0.04,-0.24,-0.24,-0.41,-0.48,-0.41h-3.84c-0.24,0,-0.43,0.17,-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22,-0.08,-0.47,0,-0.59,0.22L2.74,8.87C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58c-0.18,0.14,-0.23,0.41,-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39,-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44,-0.17,0.47,-0.41l0.36,-2.54c0.59,-0.24,1.13,-0.56,1.62,-0.94l2.39,0.96c0.22,0.08,0.47,0,0.59,-0.22l1.92,-3.32c0.12,-0.22,0.07,-0.47,-0.12,-0.61L19.14,12.94z M12,15.6c-1.98,0,-3.6,-1.62,-3.6,-3.6s1.62,-3.6,3.6,-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>';
+const ICON_FULLSCREEN = '<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7,14H5v5h5v-2H7V14z M5,10h2V7h3V5H5V10z M17,17h-3v2h5v-5h-2V17z M14,5v2h3v3h2V5H14z"/></svg>';
+
+document.getElementById('settingsBtn').innerHTML = ICON_SETTINGS + '<span data-i18n="settings">方向盘设置</span>';
+document.querySelectorAll('.fullscreenBtn').forEach(btn => btn.innerHTML = ICON_FULLSCREEN);
+
+/* ---------------------------------------------------------------------
+ * Steering angle range (settings presets) and response shaping
+ * ------------------------------------------------------------------- */
+const ANGLE_PRESETS = [45, 60, 90, 120];
+let maxAngleDeg = ANGLE_PRESETS.includes(parseFloat(localStorage.getItem('maxAngleDeg')))
+  ? parseFloat(localStorage.getItem('maxAngleDeg'))
+  : 90;
+const wsUrl = `wss://${location.host}/ws`;
+
+// Power curve applied to the normalized steering value: softer near center,
+// sharper toward lock, closer to how a real car's steering feels than a
+// straight linear mapping. STEER_DEADZONE zeroes out sub-threshold sensor
+// noise near center.
+const STEER_DEADZONE = 0.02;
+const STEER_CURVE_EXPONENT = 1.15;
+
+// Light low-pass filter (EMA) on the final steering value. Raw accelerometer
+// samples are noisy enough on their own to make fine control impractical;
+// this removes most of that jitter with only a couple of frames of latency.
+const STEER_SMOOTHING_ALPHA = 0.5;
+let steerSmoothed = 0;
+
+function applySteerCurve(x) {
+  if (Math.abs(x) < STEER_DEADZONE) return 0;
+  const sign = x < 0 ? -1 : 1;
+  const scaled = (Math.abs(x) - STEER_DEADZONE) / (1 - STEER_DEADZONE);
+  return sign * Math.pow(scaled, STEER_CURVE_EXPONENT);
+}
+
+// Prevent the browser's text-selection / long-press context menu from
+// interrupting held buttons (throttle, brake, gear paddles, etc).
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+document.addEventListener('dragstart', (e) => e.preventDefault());
+document.addEventListener('selectstart', (e) => e.preventDefault());
+
+let ws = null;
+let calibrationOffset = 0;
+let latestAx = 0;
+let latestAy = 0;
+let normalized = 0;
+let inverted = localStorage.getItem('steeringInverted') === '1';
+let analogPedals = localStorage.getItem('analogPedals') !== '0';
+let running = false;
+
+const controls = {
+  gearUp: false, gearDown: false,
+  drsPit: false, overtake: false, lookBack: false,
+  radio: false, mfd: false, menuStart: false, fullThrottle: false, fullBrake: false,
+  dpadUp: false, dpadDown: false, dpadLeft: false, dpadRight: false,
+};
+
+const setupScreen = document.getElementById('setupScreen');
+const driveScreen = document.getElementById('driveScreen');
+const statusTexts = [document.getElementById('statusText'), document.getElementById('statusText2')];
+const statusDots = [document.getElementById('statusDot'), document.getElementById('statusDot2')];
+const angleEl = document.getElementById('angle');
+const miniAngleEl = document.getElementById('miniAngle');
+const wheelEls = [document.getElementById('wheel'), document.getElementById('miniWheel')];
+const startBtn = document.getElementById('startBtn');
+const brakePct = document.querySelector('#brakeZone .pct');
+const throttlePct = document.querySelector('#throttleZone .pct');
+const gearIndicatorEl = document.getElementById('gearIndicator');
+const rpmBarFillEl = document.getElementById('rpmBarFill');
+const speedValueEl = document.getElementById('speedValue');
+const drsIndicatorEl = document.getElementById('drsIndicator');
+
+// Shift-light threshold: buzz once the RPM bar crosses this percentage.
+const SHIFT_THRESHOLD_PCT = 92;
+let lastGear = null;
+let lastDrsActive = false;
+let lastShiftBuzzAt = 0;
+
+function onTelemetry(snapshot) {
+  speedValueEl.textContent = snapshot.spd;
+  gearIndicatorEl.textContent = snapshot.gear === 0 ? 'N' : snapshot.gear === -1 ? 'R' : snapshot.gear;
+  rpmBarFillEl.style.width = snapshot.rpmPct + '%';
+  const inShiftZone = snapshot.rpmPct >= SHIFT_THRESHOLD_PCT;
+  rpmBarFillEl.classList.toggle('shift', inShiftZone);
+  const drsActive = !!snapshot.drs;
+  drsIndicatorEl.classList.toggle('active', drsActive);
+
+  if (navigator.vibrate) {
+    const now = Date.now();
+    if (inShiftZone && now - lastShiftBuzzAt > 120) {
+      navigator.vibrate(15);
+      lastShiftBuzzAt = now;
+    }
+    if (lastGear !== null && snapshot.gear !== lastGear) {
+      navigator.vibrate(25);
+    }
+    if (!lastDrsActive && drsActive) {
+      navigator.vibrate([10, 30, 10]);
+    }
+  }
+  lastGear = snapshot.gear;
+  lastDrsActive = drsActive;
+}
+
+let currentStatusKey = 'notConnected';
+let currentStatusLive = false;
+
+function setStatus(key, live) {
+  currentStatusKey = key;
+  currentStatusLive = live;
+  const text = t(key);
+  statusTexts.forEach(el => el.textContent = text);
+  statusDots.forEach(el => el.classList.toggle('live', !!live));
+}
+
+/* ---------------------------------------------------------------------
+ * Throttle/brake pedals: in analog mode, the touch position along the
+ * pedal sets the value directly (top = 100%, bottom = 0%), like a real
+ * vertical fader. Releasing eases the value down over a few frames
+ * instead of cutting to zero instantly.
+ * ------------------------------------------------------------------- */
+const PEDAL_RELEASE_DECAY = 0.80;
+
+function createPedal(zoneEl, pctEl) {
+  const state = { value: 0, active: false, releasing: false };
+  const fillEl = zoneEl.querySelector('.pedalFill');
+
+  function render() {
+    pctEl.textContent = Math.round(state.value * 100) + '%';
+    zoneEl.classList.toggle('pressed', state.value > 0.04);
+    if (fillEl) fillEl.style.height = (state.value * 100) + '%';
+  }
+
+  function valueFromPointer(event) {
+    const rect = zoneEl.getBoundingClientRect();
+    // A clockwise-rotated pedal's visual top is the physical right edge.
+    const value = matchMedia('(orientation: portrait)').matches
+      ? (event.clientX - rect.left) / rect.width
+      : (rect.bottom - event.clientY) / rect.height;
+    return Math.max(0, Math.min(1, value));
+  }
+
+  zoneEl.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    zoneEl.setPointerCapture(e.pointerId);
+    state.releasing = false;
+    state.active = true;
+    state.value = analogPedals ? valueFromPointer(e) : 1;
+    render();
+  });
+  zoneEl.addEventListener('pointermove', (e) => {
+    if (!state.active || !analogPedals) return;
+    state.value = valueFromPointer(e);
+    render();
+  });
+  function release() {
+    if (!state.active) return;
+    state.active = false;
+    if (analogPedals) {
+      state.releasing = true;
+    } else {
+      state.value = 0;
+      render();
+    }
+  }
+  zoneEl.addEventListener('pointerup', release);
+  zoneEl.addEventListener('pointercancel', release);
+  zoneEl.addEventListener('pointerleave', release);
+
+  return {
+    getValue() { return state.value; },
+    reset() { state.value = 0; state.active = false; state.releasing = false; render(); },
+    tick() {
+      if (state.releasing) {
+        state.value *= PEDAL_RELEASE_DECAY;
+        if (state.value < 0.01) {
+          state.value = 0;
+          state.releasing = false;
+        }
+      }
+      render();
+      return state.value;
+    },
+  };
+}
+
+const brakePedal = createPedal(document.getElementById('brakeZone'), brakePct);
+const throttlePedal = createPedal(document.getElementById('throttleZone'), throttlePct);
+
+let sendFrame = 0;
+function resetQuickPedals() {
+  controls.fullThrottle = false;
+  controls.fullBrake = false;
+  throttlePedal.reset();
+  brakePedal.reset();
+  document.getElementById('fullThrottleBtn').classList.remove('pressed');
+  document.getElementById('fullBrakeBtn').classList.remove('pressed');
+}
+function renderPedalReadouts(throttle, brake) {
+  throttlePct.textContent = Math.round(throttle * 100) + '%';
+  brakePct.textContent = Math.round(brake * 100) + '%';
+  document.querySelector('#throttleZone .pedalFill').style.height = throttle * 100 + '%';
+  document.querySelector('#brakeZone .pedalFill').style.height = brake * 100 + '%';
+}
+function sendImmediatePedals() {
+  const throttle = controls.fullThrottle ? 1 : throttlePedal.getValue();
+  const brake = controls.fullBrake ? 1 : brakePedal.getValue();
+  renderPedalReadouts(throttle, brake);
+  if (running && !document.hidden) sendControlSnapshot(throttle, brake);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    resetQuickPedals();
+    brakePedal.reset();
+    Object.keys(controls).forEach(key => controls[key] = false);
+    if (ws?.readyState === WebSocket.OPEN) ws.send('{}');
+  } else if (running && (!ws || ws.readyState === WebSocket.CLOSED)) connect();
+});
+
+function setFullscreenButtonsVisible() {
+  const supported = !!(document.documentElement.requestFullscreen);
+  document.querySelectorAll('.fullscreenBtn').forEach(btn => btn.hidden = !supported);
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+
+function connect() {
+  ws = new WebSocket(wsUrl);
+  ws.onopen = () => setStatus('connected', true);
+  ws.onclose = () => {
+    resetQuickPedals();
+    setStatus('connectionFailed', false);
+    if (running) setTimeout(() => { if (running && !document.hidden) connect(); }, 2000);
+  };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (event) => {
+    let data;
+    try { data = JSON.parse(event.data); } catch { return; }
+    onTelemetry(data);
+  };
+}
+
+/* ---------------------------------------------------------------------
+ * Steering angle: raw accelerometer gravity-vector angle via atan2, with
+ * unwrap so the reading doesn't jump when it crosses the +/-180 degree
+ * seam (e.g. 179 -> -179 reads as a 358-degree turn instead of a 2-degree
+ * one). No fusion with the gyroscope -- kept intentionally simple.
+ * ------------------------------------------------------------------- */
+let rollEstimate = 0;
+let hasRollReading = false;
+
+function onMotion(event) {
+  const g = event.accelerationIncludingGravity;
+  if (!g || g.x === null || g.y === null) return;
+  latestAx = g.x;
+  latestAy = g.y;
+  const raw = Math.atan2(latestAx, -latestAy) * 180 / Math.PI;
+
+  if (!hasRollReading) {
+    rollEstimate = raw;
+    hasRollReading = true;
+    return;
+  }
+  rollEstimate = raw + Math.round((rollEstimate - raw) / 360) * 360;
+}
+
+function currentRollDegrees() {
+  return rollEstimate;
+}
+
+function calibrate() {
+  calibrationOffset = currentRollDegrees();
+}
+
+function bindHold(el, onChange) {
+  const set = (v) => { onChange(v); el.classList.toggle('pressed', !!v); };
+  el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); set(true); });
+  el.addEventListener('pointerup', () => set(false));
+  el.addEventListener('pointercancel', () => set(false));
+  el.addEventListener('pointerleave', () => set(false));
+}
+
+bindHold(document.getElementById('fullThrottleBtn'), value => {
+  controls.fullThrottle = value;
+  if (!value) throttlePedal.reset();
+  sendImmediatePedals();
+});
+bindHold(document.getElementById('fullBrakeBtn'), value => {
+  controls.fullBrake = value;
+  if (!value) brakePedal.reset();
+  sendImmediatePedals();
+});
+bindHold(document.getElementById('gameMenuBtn'), v => controls.menuStart = v);
+bindHold(document.getElementById('gearUpBtn'), v => controls.gearUp = v);
+bindHold(document.getElementById('gearDownBtn'), v => controls.gearDown = v);
+bindHold(document.getElementById('drsPitBtn'), v => controls.drsPit = v);
+bindHold(document.getElementById('overtakeBtn'), v => controls.overtake = v);
+bindHold(document.getElementById('lookBackBtn'), v => controls.lookBack = v);
+bindHold(document.getElementById('radioBtn'), v => controls.radio = v);
+bindHold(document.getElementById('mfdBtn'), v => controls.mfd = v);
+bindHold(document.getElementById('dpadUpBtn'), v => controls.dpadUp = v);
+bindHold(document.getElementById('dpadDownBtn'), v => controls.dpadDown = v);
+bindHold(document.getElementById('dpadLeftBtn'), v => controls.dpadLeft = v);
+bindHold(document.getElementById('dpadRightBtn'), v => controls.dpadRight = v);
+
+function updateSteeringMeter(value) {
+  const v = Number.isFinite(value) ? Math.max(-1, Math.min(1, value)) : 0;
+  const left = Math.max(0, -v) * 100;
+  const right = Math.max(0, v) * 100;
+  document.getElementById('steerLeftFill').style.width = left + '%';
+  document.getElementById('steerRightFill').style.width = right + '%';
+  document.getElementById('steerLeftValue').textContent = '左 ' + Math.round(left) + '%';
+  document.getElementById('steerRightValue').textContent = '右 ' + Math.round(right) + '%';
+  document.getElementById('steerLeftTrack').setAttribute('aria-valuenow', String(Math.round(left)));
+  document.getElementById('steerRightTrack').setAttribute('aria-valuenow', String(Math.round(right)));
+}
+
+function updateSteeringRange() {
+  document.getElementById('steerLeftLimit').textContent = '−' + maxAngleDeg + '° 满幅';
+  document.getElementById('steerRightLimit').textContent = '+' + maxAngleDeg + '° 满幅';
+  document.getElementById('steeringRange').textContent = '满转向 ±' + maxAngleDeg + '°';
+}
+
+function sendLoop() {
+  if (!running) return;
+  let relative = currentRollDegrees() - calibrationOffset;
+  if (inverted) relative = -relative;
+  const linear = Math.max(-1, Math.min(1, relative / maxAngleDeg));
+  const curved = applySteerCurve(linear);
+  steerSmoothed += (curved - steerSmoothed) * STEER_SMOOTHING_ALPHA;
+  normalized = steerSmoothed;
+  updateSteeringMeter(normalized);
+
+  const pct = Math.round(normalized * 100);
+  angleEl.innerHTML = pct + '<span>%</span>';
+  miniAngleEl.textContent = pct + '%';
+  wheelEls.forEach(w => w.style.transform = `rotate(${normalized * 90}deg)`);
+  const pedalValue = throttlePedal.tick();
+  const brakePedalValue = brakePedal.tick();
+  const throttleValue = controls.fullThrottle ? 1 : pedalValue;
+  const brakeValue = controls.fullBrake ? 1 : brakePedalValue;
+  renderPedalReadouts(throttleValue, brakeValue);
+
+  sendControlSnapshot(throttleValue, brakeValue);
+  sendFrame = requestAnimationFrame(sendLoop);
+}
+
+function sendControlSnapshot(throttleValue, brakeValue) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      a: normalized,
+      t: throttleValue,
+      b: brakeValue,
+      gu: controls.gearUp,
+      gd: controls.gearDown,
+      dp: controls.drsPit,
+      ot: controls.overtake,
+      lb: controls.lookBack,
+      ra: controls.radio,
+      mf: controls.mfd,
+      st: controls.menuStart,
+      du: controls.dpadUp,
+      dd: controls.dpadDown,
+      dl: controls.dpadLeft,
+      dr: controls.dpadRight,
+    }));
+  }
+}
+
+function preferLandscape() {
+  try {
+    const attempt = screen.orientation?.lock?.('landscape');
+    if (attempt?.catch) attempt.catch(() => {});
+  } catch (_) { /* CSS landscape layout works without OS locking support. */ }
+}
+document.addEventListener('fullscreenchange', preferLandscape);
+preferLandscape();
+
+async function start() {
+  if (running) return;
+  if (typeof window.__nativeRequestMotion === 'function') {
+    await window.__nativeRequestMotion();
+  } else if (typeof DeviceMotionEvent !== 'undefined' &&
+      typeof DeviceMotionEvent.requestPermission === 'function') {
+    const result = await DeviceMotionEvent.requestPermission();
+    if (result !== 'granted') {
+      setStatus('motionDenied', false);
+      return;
+    }
+  }
+  preferLandscape();
+  window.addEventListener('devicemotion', onMotion);
+  calibrate();
+  connect();
+  running = true;
+  setupScreen.style.display = 'none';
+  driveScreen.classList.add('active');
+  sendFrame = requestAnimationFrame(sendLoop);
+}
+
+function stop() {
+  running = false;
+  cancelAnimationFrame(sendFrame);
+  resetQuickPedals();
+  brakePedal.reset();
+  Object.keys(controls).forEach(key => controls[key] = false);
+  if (ws?.readyState === WebSocket.OPEN) ws.send('{}');
+  window.removeEventListener('devicemotion', onMotion);
+  rollEstimate = 0;
+  hasRollReading = false;
+  steerSmoothed = 0;
+  driveScreen.classList.remove('active');
+  setupScreen.style.display = 'grid';
+  document.getElementById('settingsOverlay').classList.remove('open');
+  if (ws) ws.close();
+}
+
+function toggleInvert(target) {
+  inverted = !inverted;
+  localStorage.setItem('steeringInverted', inverted ? '1' : '0');
+  if (target) target.style.color = inverted ? 'var(--accent)' : '';
+}
+
+function openCertTab() {
+  window.open(`https://${location.host}/`, '_blank');
+}
+
+function applyAnalogPedalShape() {
+  document.getElementById('brakeZone').classList.toggle('analog', analogPedals);
+  document.getElementById('throttleZone').classList.toggle('analog', analogPedals);
+}
+
+function toggleAnalogPedals() {
+  analogPedals = !analogPedals;
+  localStorage.setItem('analogPedals', analogPedals ? '1' : '0');
+  document.getElementById('analogBtn').textContent = t(analogPedals ? 'analogPedalsOn' : 'analogPedalsOff');
+  applyAnalogPedalShape();
+}
+
+function updateAnglePresetButtons() {
+  document.querySelectorAll('.angle-preset').forEach(btn => {
+    btn.classList.toggle('active-preset', parseFloat(btn.dataset.angle) === maxAngleDeg);
+  });
+}
+
+function setMaxAngleDeg(deg) {
+  maxAngleDeg = deg;
+  localStorage.setItem('maxAngleDeg', String(deg));
+  updateAnglePresetButtons();
+  updateSteeringRange();
+}
+
+startBtn.addEventListener('click', start);
+document.getElementById('calBtn').addEventListener('click', calibrate);
+document.getElementById('certBtn').addEventListener('click', openCertTab);
+document.getElementById('invertBtn').addEventListener('click', (e) => toggleInvert(e.target));
+document.getElementById('fullscreenBtn1').addEventListener('click', toggleFullscreen);
+
+document.getElementById('settingsBtn').addEventListener('click', () => document.getElementById('settingsOverlay').classList.add('open'));
+document.getElementById('closeSettingsBtn').addEventListener('click', () => document.getElementById('settingsOverlay').classList.remove('open'));
+document.getElementById('calBtn2').addEventListener('click', calibrate);
+document.getElementById('certBtn2').addEventListener('click', openCertTab);
+document.getElementById('invertBtn2').addEventListener('click', (e) => toggleInvert(e.target));
+document.getElementById('analogBtn').addEventListener('click', toggleAnalogPedals);
+document.getElementById('fullscreenBtn2').addEventListener('click', toggleFullscreen);
+document.getElementById('stopBtn').addEventListener('click', stop);
+
+document.querySelectorAll('.angle-preset').forEach(btn => {
+  btn.addEventListener('click', () => setMaxAngleDeg(parseFloat(btn.dataset.angle)));
+});
+document.querySelectorAll('.lang-preset').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+
+applyTranslations();
+applyAnalogPedalShape();
+setFullscreenButtonsVisible();
+updateAnglePresetButtons();
+updateSteeringRange();
+updateSteeringMeter(0);
+</script>
+</body>
+</html>
+
+

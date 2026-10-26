@@ -1,0 +1,42 @@
+name: PhoneWheel
+options:
+  bundleIdPrefix: io.phonewheel.personal
+  deploymentTarget:
+    iOS: '16.4'
+targets:
+  PhoneWheel:
+    type: application
+    platform: iOS
+    sources:
+      - path: AppDelegate.swift
+      - path: WheelViewController.swift
+      - path: NativeBridge.js
+      - path: index.html
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.phonewheel.personal.controller
+        SWIFT_VERSION: '5.0'
+        TARGETED_DEVICE_FAMILY: '1'
+        CODE_SIGNING_ALLOWED: NO
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: 手机方向盘
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.games
+        INFOPLIST_KEY_NSMotionUsageDescription: 使用手机倾斜控制电脑游戏方向盘。
+        INFOPLIST_KEY_NSLocalNetworkUsageDescription: 连接你电脑上的 Phone Wheel，发送手柄输入并接收赛车遥测。
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UIStatusBarHidden: YES
+        INFOPLIST_KEY_UIViewControllerBasedStatusBarAppearance: YES
+        INFOPLIST_KEY_UIRequiresFullScreen: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+        MARKETING_VERSION: '0.1.0'
+        CURRENT_PROJECT_VERSION: '1'
+    dependencies:
+      - sdk: UIKit.framework
+      - sdk: WebKit.framework
+      - sdk: CoreMotion.framework
+      - sdk: CoreHaptics.framework
+      - sdk: CryptoKit.framework
+    scheme:
+      testTargets: []
+
