@@ -470,6 +470,12 @@
   #connectionDetails h2 { margin:0 0 12px; font-size:18px; }
   #connectionDetailsText { margin:0 0 16px; white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; font-size:14px; }
   #connectionDetailsClose { display:block; width:100%; background:#29384b; }
+
+  #steeringAssistSection { grid-column:1 / -1; }
+  #steeringAssistModes { display:grid; grid-template-columns:1fr 1fr 1.6fr; gap:7px; }
+  .assist-mode { min-height:38px; padding:6px; font-size:12px; }
+  .assist-mode.selected { border-color:#4bbdcf; background:#15343d; }
+  #steeringAssistNote { color:#a7b6c8; font-size:10px; line-height:1.45; margin-top:8px; }
 </style>
 </head>
 <body>
@@ -609,6 +615,14 @@
       <div id="anglePresets">
         <button class="angle-preset" data-angle="45">45&deg;</button><button class="angle-preset" data-angle="60">60&deg;</button><button class="angle-preset" data-angle="90">90&deg;</button><button class="angle-preset" data-angle="120">120&deg;</button>
       </div>
+    </section>
+    <section class="menu-section" id="steeringAssistSection"><div class="menu-section-title">转向辅助</div>
+      <div id="steeringAssistModes">
+        <button class="assist-mode" data-assist="off" id="assistOffBtn">关闭</button>
+        <button class="assist-mode" data-assist="stable" id="assistStableBtn">高速稳定</button>
+        <button class="assist-mode" data-assist="game" id="assistGameBtn">游戏内辅助（需设置）</button>
+      </div>
+      <div id="steeringAssistNote"></div>
     </section>
     <button id="certBtn2" data-i18n="verifyWs">检查连接页面</button>
     <div class="menu-footer"><button id="stopBtn" data-i18n="stop">结束驾驶</button><button id="closeSettingsBtn" data-i18n="close">返回驾驶</button></div>
@@ -753,6 +767,31 @@ const wsUrl = `wss://${location.host}/ws`;
 // noise near center.
 const STEER_DEADZONE = 0.012;
 const STEER_CURVE_EXPONENT = 1.15;
+let steeringAssistMode = ['off','stable','game'].includes(localStorage.getItem('steeringAssistMode')) ? localStorage.getItem('steeringAssistMode') : 'off';
+let steeringAssistSpeed = 0;
+function updateSteeringAssistMenu() {
+  [['assistOffBtn','off'],['assistStableBtn','stable'],['assistGameBtn','game']].forEach(([id,mode]) => {
+    document.getElementById(id).classList.toggle('selected',steeringAssistMode===mode);
+    document.getElementById(id).setAttribute('aria-pressed',String(steeringAssistMode===mode));
+  });
+  document.getElementById('steeringAssistNote').textContent = steeringAssistMode==='stable'
+    ? '高速时收柔中心区域，低速保持原响应；仍可打满方向。无遥测时恢复原响应。'
+    : steeringAssistMode==='game' ? '此选择仅显示设置指引；请在 F1 25 内开启转向辅助，App 无法确认游戏开关。'
+    : '使用原有转向响应。游戏内的驾驶辅助需单独设置。';
+}
+function setSteeringAssistMode(mode) {
+  if (!['off','stable','game'].includes(mode)) return;
+  steeringAssistMode=mode; localStorage.setItem('steeringAssistMode',mode);
+  updateSteeringAssistMenu(); updateSteeringRange();
+  if (mode==='game') showGameAssistGuide();
+}
+function showGameAssistGuide() {
+  closeSettings();
+  resetQuickPedals(); feedbackPaused=true;
+  document.getElementById('connectionDetailsTitle').textContent='F1 25 游戏内转向辅助';
+  document.getElementById('connectionDetailsText').textContent='请先暂停游戏，在设置中找到“辅助 / 驾驶辅助（Assists）”，将“转向辅助（Steering Assist）”设为开启。\n\n如果该项不可用，请检查当前驾驶风格或比赛房间是否允许辅助。开启它还会联动刹车辅助、ABS 和牵引力控制。\n\n这里是设置指引，未更改游戏开关；游戏内实际设置以 F1 25 显示为准。';
+  document.getElementById('connectionDetails').showModal();
+}
 
 // Light low-pass filter (EMA) on the final steering value. Raw accelerometer
 // samples are noisy enough on their own to make fine control impractical;
@@ -764,7 +803,8 @@ function applySteerCurve(x) {
   if (Math.abs(x) < STEER_DEADZONE) return 0;
   const sign = x < 0 ? -1 : 1;
   const scaled = (Math.abs(x) - STEER_DEADZONE) / (1 - STEER_DEADZONE);
-  return sign * Math.pow(scaled, STEER_CURVE_EXPONENT);
+  const speedFactor=steeringAssistMode==='stable' ? Math.max(0,Math.min(1,(steeringAssistSpeed-60)/220)) : 0;
+  return sign * Math.pow(scaled, STEER_CURVE_EXPONENT+0.25*speedFactor);
 }
 
 // Prevent the browser's text-selection / long-press context menu from
@@ -847,6 +887,7 @@ const telemetryStripEl = document.getElementById('telemetryStrip');
 const telemetryHintEl = document.getElementById('telemetryHint');
 const finite = (value, low, high) => Number.isFinite(Number(value)) ? Math.max(low, Math.min(high, Number(value))) : 0;
 function clearTelemetry() {
+  steeringAssistSpeed=0;
   feedbackRoad = {speed:0,kerb:0,seenAt:0};
   telemetryStripEl.classList.add('stale');
   gearIndicatorEl.textContent = '—'; speedValueEl.textContent = '—'; rpmValueEl.textContent = '— RPM';
@@ -859,6 +900,7 @@ function clearTelemetry() {
 function onTelemetry(snapshot) {
   if (snapshot.valid !== true) { clearTelemetry(); return; }
   telemetrySeenAt = Date.now();
+  steeringAssistSpeed=finite(snapshot.spd,0,500);
   feedbackRoad = {speed:finite(snapshot.spd,0,500),kerb:Array.isArray(snapshot.surfaceTypes)?snapshot.surfaceTypes.slice(0,4).filter(value=>value===1).length:0,seenAt:telemetrySeenAt};
   telemetryStripEl.classList.remove('stale');
   telemetryHintEl.textContent = '实时游戏遥测';
@@ -1172,7 +1214,7 @@ function updateSteeringMeter(value) {
 function updateSteeringRange() {
   document.getElementById('steerLeftLimit').textContent = '−' + maxAngleDeg + '° 满幅';
   document.getElementById('steerRightLimit').textContent = '+' + maxAngleDeg + '° 满幅';
-  document.getElementById('steeringRange').textContent = '满转向 ±' + maxAngleDeg + '°';
+  document.getElementById('steeringRange').textContent = '满转向 ±' + maxAngleDeg + '°' + (steeringAssistMode==='stable' ? ' · 稳定' : '');
 }
 
 function updateSteeringValue() {
@@ -1335,6 +1377,7 @@ document.querySelectorAll('.lang-preset').forEach(btn => {
 });
 
 function showConnectionDetails() {
+  document.getElementById('connectionDetailsTitle').textContent='连接状态';
   resetQuickPedals(); brakePedal.reset(); throttlePedal.reset();
   Object.keys(controls).forEach(key=>controls[key]=false);
   renderPedalReadouts(0,0); sendControlSnapshot(0,0);
@@ -1349,6 +1392,8 @@ document.getElementById('driveStatus').addEventListener('keydown', event => {
 document.getElementById('connectionDetailsClose').addEventListener('click', () => document.getElementById('connectionDetails').close());
 document.getElementById('connectionDetails').addEventListener('close', () => { feedbackPaused=false; });
 
+[['assistOffBtn','off'],['assistStableBtn','stable'],['assistGameBtn','game']].forEach(([id,mode]) => document.getElementById(id).addEventListener('click',()=>setSteeringAssistMode(mode)));
+updateSteeringAssistMenu();
 applyTranslations();
 applyAnalogPedalShape();
 setFullscreenButtonsVisible();
