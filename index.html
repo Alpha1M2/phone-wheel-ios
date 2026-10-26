@@ -481,7 +481,7 @@
   #driveScreen { --pedal-width:clamp(92px,calc(26 * var(--wheel-vh)),120px); }
   #brakeZone.analog, #throttleZone.analog, .quickPedals button { width:var(--pedal-width); }
   .quickPedals button {
-    height:min(clamp(72px,calc(22 * var(--wheel-vh)),96px),calc(40 * var(--wheel-vh) - max(14px,var(--wheel-safe-bottom)) - 10px - max(6px,var(--wheel-safe-top)) - 6px));
+    height:min(clamp(92px,calc(28 * var(--wheel-vh)),120px),calc(40 * var(--wheel-vh) - max(14px,var(--wheel-safe-bottom)) - 10px - max(6px,var(--wheel-safe-top)) - 6px));
     font-size:16px; border-radius:15px;
   }
   #driveMid { top:calc(60px + var(--wheel-safe-top)); bottom:calc(24px + var(--wheel-safe-bottom)); padding-inline:calc(var(--pedal-width) + 14px); gap:5px; }
@@ -936,11 +936,12 @@ function updateRaceFeedback(throttle, brake) {
   brake=allowed?finite(brake,0,1):0;
   // EA surface type 1 means rumble strip. Road feedback needs fresh moving-car telemetry.
   const kerb=allowed && now-feedbackRoad.seenAt<250 && feedbackRoad.speed>5 ? feedbackRoad.kerb : 0;
-  const road=kerb>0 ? Math.min(0.72, (0.34+0.09*kerb)*Math.min(1,feedbackRoad.speed/90)) : 0;
+  // Native curb cues supply the road texture; avoid layering the old sharp rumble on top.
+  const road=kerb>0 && typeof window.__nativeCurbImpact!=='function' ? Math.min(0.72, (0.34+0.09*kerb)*Math.min(1,feedbackRoad.speed/90)) : 0;
   const background=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250 ? 0.055 : 0;
   const intensity=Math.min(0.9,background+Math.max(throttle*0.16,brake*0.4)+road);
-  const sharpness=road>0?0.88:brake>0?0.65:0.22;
-  const frame={intensity,sharpness,roughness:road>0?1:0};
+  const sharpness=road>0?0.18:brake>0?0.65:0.22;
+  const frame={intensity,sharpness,roughness:0};
   const changed=Math.abs(frame.intensity-lastFeedback.intensity)>0.015 || frame.roughness!==lastFeedback.roughness || (intensity>0 && frame.sharpness!==lastFeedback.sharpness);
   if (!changed && now-lastFeedbackAt<80) return;
   lastFeedbackAt=now; lastFeedback=frame;

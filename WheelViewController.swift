@@ -18,6 +18,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private var limitPlayer: CHHapticPatternPlayer?
     private var lastLimitCueAt = 0.0
     private var limitCueUntil = 0.0
+    private var curbCueUntil = 0.0
     private var lastCurbImpactAt = 0.0
     private var feedbackTimer: DispatchSourceTimer?
     private var feedbackUpdatedAt = 0.0
@@ -279,7 +280,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
         ], relativeTime: 0, duration: 30)
         // Embed initial gain so the first frame cannot produce a full-strength jolt.
-        let initialGain: Float = ProcessInfo.processInfo.systemUptime < limitCueUntil ? 0 : feedbackIntensity
+        let initialGain: Float = ProcessInfo.processInfo.systemUptime < max(limitCueUntil, curbCueUntil) ? 0 : feedbackIntensity
         let pattern = try CHHapticPattern(events: [event], parameters: [
             CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: initialGain, relativeTime: 0),
             CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: feedbackSharpness - 0.5, relativeTime: 0)
@@ -305,7 +306,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             }
             // A rumble-strip texture modulates continuous pedal resistance at 16 Hz.
             let pulse = Float(0.5 + 0.5 * sin(now * 2 * Double.pi * 16))
-            let gain: Float = now < limitCueUntil ? 0 : feedbackIntensity * (1 - 0.65 * feedbackRoughness + 0.65 * feedbackRoughness * pulse)
+            let gain: Float = now < max(limitCueUntil, curbCueUntil) ? 0 : feedbackIntensity * (1 - 0.65 * feedbackRoughness + 0.65 * feedbackRoughness * pulse)
             try feedbackPlayer?.sendParameters([
                 CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: gain, relativeTime: 0),
                 CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: feedbackSharpness - 0.5, relativeTime: 0)
@@ -319,31 +320,26 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
               (socket != nil || force), requestedStrength.isFinite,
               (force || now >= limitCueUntil), now - lastCurbImpactAt >= 0.1,
               CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-        let strength = Float(min(1, max(0.35, requestedStrength)))
+        // Match the soft steering-limit texture, at a stronger 0.90...1.00 intensity.
+        let strength = Float(0.9 + 0.1 * min(1, max(0, requestedStrength)))
         do {
             let engine = try prepareHapticEngine()
-            let events = [
-                CHHapticEvent(eventType: .hapticTransient, parameters: [
-                    CHHapticEventParameter(parameterID: .hapticIntensity, value: strength),
-                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.95)
-                ], relativeTime: 0),
-                CHHapticEvent(eventType: .hapticTransient, parameters: [
-                    CHHapticEventParameter(parameterID: .hapticIntensity, value: strength * 0.85),
-                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
-                ], relativeTime: 0.055),
-                CHHapticEvent(eventType: .hapticContinuous, parameters: [
-                    CHHapticEventParameter(parameterID: .hapticIntensity, value: strength * 0.55),
-                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.85)
-                ], relativeTime: 0.015, duration: 0.09)
-            ]
-            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let event = CHHapticEvent(eventType: .hapticContinuous, parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: strength),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.18)
+            ], relativeTime: 0, duration: 0.14)
+            let pattern = try CHHapticPattern(events: [event], parameters: [])
             let player = try engine.makePlayer(with: pattern)
             try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
             curbPlayer = player
+            // Temporarily duck the pedal/background layer so it cannot sharpen the cue.
+            curbCueUntil = now + 0.14
+            renderRaceFeedback()
             try player.start(atTime: CHHapticTimeImmediate)
             lastCurbImpactAt = now
         } catch {
             curbPlayer = nil
+            curbCueUntil = 0
         }
     }
 
@@ -362,6 +358,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             let player = try engine.makePlayer(with: pattern)
             try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
             curbPlayer = nil
+            curbCueUntil = 0
             try? limitPlayer?.stop(atTime: CHHapticTimeImmediate)
             limitPlayer = player
             limitCueUntil = now + 0.16
@@ -375,6 +372,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         stopRaceFeedback()
         try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
         curbPlayer = nil
+        curbCueUntil = 0
         try? limitPlayer?.stop(atTime: CHHapticTimeImmediate)
         limitPlayer = nil
         limitCueUntil = 0
