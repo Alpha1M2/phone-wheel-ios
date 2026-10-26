@@ -182,13 +182,13 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         motionGeneration += 1
         let generation = motionGeneration
         motionDeliveryInFlight = false
-        motion.deviceMotionUpdateInterval = 1.0 / 60.0
+        motion.deviceMotionUpdateInterval = 1.0 / 100.0
         UIApplication.shared.isIdleTimerDisabled = true
         // Fused gravity excludes linear acceleration; arbitrary heading avoids magnetic jumps.
         motion.startDeviceMotionUpdates(using: .xArbitraryZVertical, to: .main) { [weak self] sample, _ in
             guard let self = self, let sample = sample,
                   self.motionGeneration == generation, !self.motionDeliveryInFlight,
-                  ProcessInfo.processInfo.systemUptime - sample.timestamp < 0.15 else { return }
+                  ProcessInfo.processInfo.systemUptime - sample.timestamp < 0.05 else { return }
             let g = sample.gravity
             let rate = sample.rotationRate.z * 180.0 / Double.pi
             guard [g.x, g.y, g.z, rate, sample.timestamp].allSatisfy({ $0.isFinite }) else { return }
