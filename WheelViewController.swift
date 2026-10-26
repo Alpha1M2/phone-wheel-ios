@@ -29,6 +29,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         super.viewDidLoad()
         view.backgroundColor = UIColor(red: 0.04, green: 0.043, blue: 0.05, alpha: 1)
         let config = WKWebViewConfiguration()
+        // Controller labels are not editable text: suppress iOS selection/loupe gestures.
+        config.preferences.isTextInteractionEnabled = false
         config.userContentController.add(self, name: "phoneWheel")
         if let path = Bundle.main.url(forResource: "NativeBridge", withExtension: "js"),
            let code = try? String(contentsOf: path) {
