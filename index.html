@@ -476,6 +476,74 @@
   .assist-mode { min-height:38px; padding:6px; font-size:12px; }
   .assist-mode.selected { border-color:#4bbdcf; background:#15343d; }
   #steeringAssistNote { color:#a7b6c8; font-size:10px; line-height:1.45; margin-top:8px; }
+
+  /* Thumb-sized pedals and an inset header, with a separate status footer. */
+  #driveScreen { --pedal-width:clamp(92px,calc(26 * var(--wheel-vh)),120px); }
+  #brakeZone.analog, #throttleZone.analog, .quickPedals button { width:var(--pedal-width); }
+  .quickPedals button {
+    height:min(clamp(72px,calc(22 * var(--wheel-vh)),96px),calc(40 * var(--wheel-vh) - max(14px,var(--wheel-safe-bottom)) - 10px - max(6px,var(--wheel-safe-top)) - 6px));
+    font-size:16px; border-radius:15px;
+  }
+  #driveMid { top:calc(60px + var(--wheel-safe-top)); bottom:calc(24px + var(--wheel-safe-bottom)); padding-inline:calc(var(--pedal-width) + 14px); gap:5px; }
+  #topAuxButtons { left:calc(var(--wheel-safe-left) + var(--pedal-width) + 14px); }
+  #driveTopBar .iconBtns { position:absolute; z-index:3; top:max(6px,var(--wheel-safe-top)); right:calc(var(--wheel-safe-right) + var(--pedal-width) + 16px); }
+  #driveStatus { top:auto; bottom:max(5px,var(--wheel-safe-bottom)); left:calc(var(--wheel-safe-left) + var(--pedal-width) + 14px); right:calc(var(--wheel-safe-right) + var(--pedal-width) + 14px); height:20px; padding:2px; align-items:center; justify-content:center; }
+  #statusDot2 { margin-top:0; }
+  #statusText2 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+  #miniWheelWrap { width:clamp(28px,calc(8 * var(--wheel-vh)),38px); }
+  #telemetryStrip { padding-block:6px; }
+  #shiftStack .face-button { min-height:52px; }
+  #faceButtonRow .face-button { min-height:68px; }
+
+  /* Fixed one-screen menu: three cards, with a permanently visible footer. */
+  #settingsOverlay { padding:10px var(--wheel-safe-right) max(10px,var(--wheel-safe-bottom)) var(--wheel-safe-left); overflow:hidden; }
+  #settingsPanel { width:min(calc(94 * var(--wheel-vw) - var(--wheel-safe-left) - var(--wheel-safe-right)),900px); height:min(calc(100 * var(--wheel-vh) - var(--wheel-safe-top) - var(--wheel-safe-bottom) - 20px),330px); max-height:none; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:24px minmax(0,1fr) 40px; gap:10px; padding:12px; overflow:hidden; }
+  #menuCards { display:grid; grid-template-columns:.9fr 1.05fr 1.25fr; gap:10px; min-height:0; }
+  #menuCards:has(#nativeSettingsGroup:empty) { grid-template-columns:1fr 1fr; }
+  #settingsPanel .menu-heading { grid-column:1; font-size:17px; }
+  #settingsPanel .menu-section { grid-column:auto; margin:0; padding:10px; min-width:0; min-height:0; overflow:hidden; }
+  #settingsPanel .menu-section-title { font-size:11px; margin:0 0 8px; }
+  #nativeSettingsGroup { display:flex; flex-direction:column; gap:8px; }
+  #settingsPanel button { min-height:34px; padding:6px; font-size:12px; }
+  #nativeSettingsGroup button { min-height:44px; font-size:13px; }
+  #settingsPanel #anglePresets { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  #settingsPanel #anglePresets button { min-height:30px; }
+  #menuCalibration { margin-top:8px; gap:6px; }
+  #calibrationNote { font-size:9px; line-height:1.3; }
+  #steeringAssistModes { grid-template-columns:1fr 1fr; gap:6px; }
+  #assistGameBtn { grid-column:1 / -1; font-size:11px; }
+  #steeringAssistNote { font-size:10px; line-height:1.4; margin-top:8px; }
+  #settingsPanel .menu-footer { display:flex; grid-column:1; gap:10px; min-height:0; }
+  #settingsPanel .menu-footer button { flex:1; width:auto; grid-column:auto; min-height:0; }
+  @media (max-height:350px), (orientation:portrait) and (max-width:350px) {
+    #driveMid { gap:4px; }
+    #miniWheelWrap { width:24px; }
+    #miniAngle { font-size:11px; }
+    #steeringRange { font-size:8px; }
+    #telemetryStrip { padding:4px 7px; grid-template-columns:40px minmax(36px,1fr) 60px 75px; gap:7px; }
+    #gearIndicator { font-size:28px; }
+    #speedReadout { font-size:25px; }
+    #drsIndicator { min-height:34px; }
+    #controlDeck { grid-template-columns:90px 88px minmax(0,1fr); gap:7px; }
+    #shiftStack { gap:6px; }
+    #shiftStack .face-button { min-height:42px; }
+    #shiftStack .face-button span { font-size:14px; }
+    #faceButtonRow .face-button { min-height:54px; }
+    #faceButtonRow .face-button span { font-size:12px; }
+    #faceButtonRow .face-button::before { width:24px; min-width:24px; height:24px; font-size:17px; }
+    #buttonCluster { gap:6px; }
+    #shoulderRow .action-btn { min-height:30px; }
+    #settingsPanel { grid-template-rows:22px minmax(0,1fr) 36px; gap:7px; padding:8px; }
+    #settingsPanel .menu-heading { font-size:15px; }
+    #settingsPanel .menu-section { padding:6px; }
+    #settingsPanel .menu-section-title { font-size:10px; margin-bottom:5px; }
+    #settingsPanel button { min-height:29px; font-size:11px; }
+    #settingsPanel #anglePresets button { min-height:27px; }
+    #nativeSettingsGroup button { min-height:36px; }
+    #menuCalibration { margin-top:6px; gap:4px; }
+    #calibrationNote, #steeringAssistNote { font-size:9px; }
+    #steeringAssistNote { margin-top:5px; line-height:1.3; }
+  }
 </style>
 </head>
 <body>
@@ -606,26 +674,25 @@
 <!-- ===================== SETTINGS OVERLAY (drive mode) ===================== -->
 <div id="settingsOverlay">
   <div id="settingsPanel">
-    <div class="menu-heading"><span>控制器设置</span><small>驾驶与连接</small></div>
-    <section class="menu-section" id="nativeSettingsSection"><div class="menu-section-title">连接与反馈</div><div id="nativeSettingsGroup"></div></section>
-    <section class="menu-section"><div class="menu-section-title">转向中心</div>
-      <div id="menuCalibration"><button id="calBtn2" data-i18n="calibrate">校准中心</button><span id="calibrationNote">握稳手机后校准；每次开始驾驶也会自动校准。</span></div>
-    </section>
-    <section class="menu-section"><div class="menu-section-title">满转向角度 · 单侧</div>
-      <div id="anglePresets">
-        <button class="angle-preset" data-angle="45">45&deg;</button><button class="angle-preset" data-angle="60">60&deg;</button><button class="angle-preset" data-angle="90">90&deg;</button><button class="angle-preset" data-angle="120">120&deg;</button>
-      </div>
-    </section>
-    <section class="menu-section" id="steeringAssistSection"><div class="menu-section-title">转向辅助</div>
-      <div id="steeringAssistModes">
-        <button class="assist-mode" data-assist="off" id="assistOffBtn">关闭</button>
-        <button class="assist-mode" data-assist="stable" id="assistStableBtn">高速稳定</button>
-        <button class="assist-mode" data-assist="game" id="assistGameBtn">游戏内辅助（需设置）</button>
-      </div>
-      <div id="steeringAssistNote"></div>
-    </section>
-    <button id="certBtn2" data-i18n="verifyWs">检查连接页面</button>
-    <div class="menu-footer"><button id="stopBtn" data-i18n="stop">结束驾驶</button><button id="closeSettingsBtn" data-i18n="close">返回驾驶</button></div>
+    <div class="menu-heading"><span>控制器设置</span><small>所有设置一屏完成</small></div>
+    <div id="menuCards">
+      <section class="menu-section" id="nativeSettingsSection"><div class="menu-section-title">连接与震动</div><div id="nativeSettingsGroup"></div></section>
+      <section class="menu-section" id="steerSettingsSection"><div class="menu-section-title">满转向角度 · 单侧</div>
+        <div id="anglePresets">
+          <button class="angle-preset" data-angle="45">45&deg;</button><button class="angle-preset" data-angle="60">60&deg;</button><button class="angle-preset" data-angle="90">90&deg;</button><button class="angle-preset" data-angle="120">120&deg;</button>
+        </div>
+        <div id="menuCalibration"><button id="calBtn2" data-i18n="calibrate">校准中心</button><span id="calibrationNote">握稳后校准；开始驾驶时也会自动校准。</span></div>
+      </section>
+      <section class="menu-section" id="steeringAssistSection"><div class="menu-section-title">转向辅助</div>
+        <div id="steeringAssistModes">
+          <button class="assist-mode" data-assist="off" id="assistOffBtn">关闭</button>
+          <button class="assist-mode" data-assist="stable" id="assistStableBtn">高速稳定</button>
+          <button class="assist-mode" data-assist="game" id="assistGameBtn">游戏内辅助 · 设置说明</button>
+        </div>
+        <div id="steeringAssistNote"></div>
+      </section>
+    </div>
+    <div class="menu-footer"><button id="certBtn2" data-i18n="verifyWs">检查连接页面</button><button id="stopBtn" data-i18n="stop">结束驾驶</button><button id="closeSettingsBtn" data-i18n="close">返回驾驶</button></div>
   </div>
 </div>
 
