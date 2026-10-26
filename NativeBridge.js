@@ -30,6 +30,7 @@
     socket.dispatchEvent(event);
     if (typeof socket['on'+kind] === 'function') socket['on'+kind](event);
   };
+  window.__nativeRaceFeedback = frame => post({kind:'raceFeedback', ...frame});
   Object.defineProperty(navigator, 'vibrate', {configurable:true, value:(pattern) => {
     post({kind:'haptic', pattern}); return true;
   }});
@@ -49,6 +50,7 @@
     window.dispatchEvent(event);
   };
   document.addEventListener('pointerdown', event => {
+    if (event.target.closest?.('#throttleZone,#brakeZone,#fullThrottleBtn,#fullBrakeBtn')) return;
     if (event.target.closest?.('[role="button"], button')) post({kind:'tap'});
   }, {passive:true});
 })();

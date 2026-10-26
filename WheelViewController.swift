@@ -13,6 +13,13 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private var motionDeliveryInFlight = false
     private var motionGeneration = 0
     private var engine: CHHapticEngine?
+    private var feedbackPlayer: CHHapticAdvancedPatternPlayer?
+    private var feedbackTimer: DispatchSourceTimer?
+    private var feedbackUpdatedAt = 0.0
+    private var feedbackStartedAt = 0.0
+    private var feedbackIntensity: Float = 0
+    private var feedbackSharpness: Float = 0
+    private var feedbackRoughness: Float = 0
     private var socket: PinnedWebSocket?
     private var socketID: String?
     private var endpoint: URL?
@@ -134,6 +141,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         alert.addAction(UIAlertAction(title: hapticsEnabled ? "关闭震动" : "开启震动", style: .default) { [weak self] _ in
             guard let self = self else { return }
             self.hapticsEnabled.toggle()
+            if !self.hapticsEnabled { self.stopRaceFeedback() }
             if self.hapticsEnabled { self.playHaptic([90]) }
         })
         alert.addAction(UIAlertAction(title: "测试震动", style: .default) { [weak self] _ in
@@ -160,6 +168,9 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         case "motion": startMotion()
         case "stopMotion": stopMotion()
         case "tap": playHaptic([12])
+        case "raceFeedback":
+            guard socket != nil else { stopRaceFeedback(); return }
+            updateRaceFeedback(body)
         case "haptic":
             let pattern = (body["pattern"] as? [Double]) ?? [(body["pattern"] as? Double) ?? 20]
             playHaptic(pattern)
@@ -207,18 +218,102 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         UIApplication.shared.isIdleTimerDisabled = false
     }
 
+    private func prepareHapticEngine() throws -> CHHapticEngine {
+        if let engine = engine { try engine.start(); return engine }
+        let created = try CHHapticEngine()
+        created.playsHapticsOnly = true
+        created.resetHandler = { [weak self] in
+            DispatchQueue.main.async { self?.stopRaceFeedback() }
+        }
+        created.stoppedHandler = { [weak self] _ in
+            DispatchQueue.main.async { self?.stopRaceFeedback() }
+        }
+        try created.start()
+        engine = created
+        return created
+    }
+
+    private func updateRaceFeedback(_ body: [String: Any]) {
+        guard hapticsEnabled, UIApplication.shared.applicationState == .active,
+              CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
+            stopRaceFeedback(); return
+        }
+        func unit(_ key: String) -> Float {
+            let value = body[key] as? Double ?? 0
+            return value.isFinite ? Float(min(1, max(0, value))) : 0
+        }
+        feedbackIntensity = unit("intensity")
+        feedbackSharpness = unit("sharpness")
+        feedbackRoughness = unit("roughness")
+        feedbackUpdatedAt = ProcessInfo.processInfo.systemUptime
+        guard feedbackIntensity > 0.001 else { stopRaceFeedback(); return }
+        do {
+            if feedbackPlayer == nil {
+                try startFeedbackPlayer()
+                let timer = DispatchSource.makeTimerSource(queue: .main)
+                timer.schedule(deadline: .now(), repeating: .milliseconds(25))
+                timer.setEventHandler { [weak self] in self?.renderRaceFeedback() }
+                feedbackTimer = timer
+                timer.resume()
+            }
+            renderRaceFeedback()
+        } catch { stopRaceFeedback() }
+    }
+
+    private func startFeedbackPlayer() throws {
+        let engine = try prepareHapticEngine()
+        let event = CHHapticEvent(eventType: .hapticContinuous, parameters: [
+            CHHapticEventParameter(parameterID: .hapticIntensity, value: 1),
+            CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
+        ], relativeTime: 0, duration: 30)
+        // Embed initial gain so the first frame cannot produce a full-strength jolt.
+        let pattern = try CHHapticPattern(events: [event], parameters: [
+            CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: feedbackIntensity, relativeTime: 0),
+            CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: feedbackSharpness - 0.5, relativeTime: 0)
+        ])
+        let player = try engine.makeAdvancedPlayer(with: pattern)
+        try player.start(atTime: CHHapticTimeImmediate)
+        feedbackPlayer = player
+        feedbackStartedAt = ProcessInfo.processInfo.systemUptime
+    }
+
+    private func renderRaceFeedback() {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard hapticsEnabled, UIApplication.shared.applicationState == .active,
+              now - feedbackUpdatedAt < 0.25, socket != nil else {
+            stopRaceFeedback(); return
+        }
+        do {
+            if now - feedbackStartedAt > 25 {
+                try? feedbackPlayer?.stop(atTime: CHHapticTimeImmediate)
+                feedbackPlayer = nil
+                try startFeedbackPlayer()
+            }
+            // A rumble-strip texture modulates continuous pedal resistance at 16 Hz.
+            let pulse = Float(0.5 + 0.5 * sin(now * 2 * Double.pi * 16))
+            let gain = feedbackIntensity * (1 - 0.65 * feedbackRoughness + 0.65 * feedbackRoughness * pulse)
+            try feedbackPlayer?.sendParameters([
+                CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: gain, relativeTime: 0),
+                CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: feedbackSharpness - 0.5, relativeTime: 0)
+            ], atTime: CHHapticTimeImmediate)
+        } catch { stopRaceFeedback() }
+    }
+
+    private func stopRaceFeedback() {
+        feedbackTimer?.cancel()
+        feedbackTimer = nil
+        try? feedbackPlayer?.stop(atTime: CHHapticTimeImmediate)
+        feedbackPlayer = nil
+        feedbackIntensity = 0
+    }
+
     private func playHaptic(_ input: [Double], force: Bool = false) {
         guard (hapticsEnabled || force), UIApplication.shared.applicationState == .active,
               Date().timeIntervalSince(lastHaptic) > 0.045 else { return }
         lastHaptic = Date()
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
         do {
-            if engine == nil {
-                engine = try CHHapticEngine()
-                engine?.playsHapticsOnly = true
-                engine?.resetHandler = { [weak self] in try? self?.engine?.start() }
-            }
-            try engine?.start()
+            _ = try prepareHapticEngine()
             var events: [CHHapticEvent] = []
             var time = 0.0
             for (index, value) in input.prefix(10).enumerated() {
@@ -279,6 +374,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     }
 
     private func closeSocket() {
+        stopRaceFeedback()
         let previous = socketID
         socketID = nil
         let decision = trustDecision

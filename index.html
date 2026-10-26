@@ -366,7 +366,7 @@
     bottom: calc(60 * var(--wheel-vh) + max(14px, var(--wheel-safe-bottom)) + 10px);
     width: min(calc(17 * var(--wheel-vw)), calc(20 * var(--wheel-vh)));
     min-width: 0; min-height: 0;
-    height: clamp(36px, calc(13 * var(--wheel-vh)), 54px);
+    height: min(clamp(50px, calc(18 * var(--wheel-vh)), 76px), calc(40 * var(--wheel-vh) - max(14px, var(--wheel-safe-bottom)) - max(6px, var(--wheel-safe-top)) - 48px));
     padding: 4px; border-radius: 12px; z-index: 2;
   }
   #fullBrakeBtn { left: max(14px, var(--wheel-safe-left)); }
@@ -809,6 +809,34 @@ let lastGear = null;
 let lastDrsActive = false;
 let lastShiftBuzzAt = 0;
 
+let feedbackRoad = {speed:0, kerb:0, seenAt:0};
+let feedbackPaused = false;
+let lastFeedbackAt = 0;
+let lastFeedback = {intensity:0,sharpness:0,roughness:0};
+function stopRaceFeedback() {
+  feedbackRoad = {speed:0,kerb:0,seenAt:0};
+  lastFeedback = {intensity:0,sharpness:0,roughness:0};
+  lastFeedbackAt = Date.now();
+  if (typeof window.__nativeRaceFeedback==='function') window.__nativeRaceFeedback(lastFeedback);
+}
+function updateRaceFeedback(throttle, brake) {
+  if (typeof window.__nativeRaceFeedback!=='function') return;
+  const now=Date.now();
+  const allowed=running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN;
+  throttle=allowed?finite(throttle,0,1):0;
+  brake=allowed?finite(brake,0,1):0;
+  // EA surface type 1 means rumble strip. Road feedback needs fresh moving-car telemetry.
+  const kerb=allowed && now-feedbackRoad.seenAt<250 && feedbackRoad.speed>5 ? feedbackRoad.kerb : 0;
+  const road=kerb>0 ? Math.min(0.72, (0.34+0.09*kerb)*Math.min(1,feedbackRoad.speed/90)) : 0;
+  const intensity=Math.min(0.9,Math.max(throttle*0.16,brake*0.4)+road);
+  const sharpness=road>0?0.88:brake>0?0.65:0.22;
+  const frame={intensity,sharpness,roughness:road>0?1:0};
+  const changed=Math.abs(frame.intensity-lastFeedback.intensity)>0.015 || frame.roughness!==lastFeedback.roughness || (intensity>0 && frame.sharpness!==lastFeedback.sharpness);
+  if (!changed && now-lastFeedbackAt<80) return;
+  lastFeedbackAt=now; lastFeedback=frame;
+  window.__nativeRaceFeedback(frame);
+}
+
 let telemetrySeenAt = 0;
 const rpmLeds = [...document.querySelectorAll('.rpm-led')];
 const rpmLedsEl = document.getElementById('rpmLeds');
@@ -819,6 +847,7 @@ const telemetryStripEl = document.getElementById('telemetryStrip');
 const telemetryHintEl = document.getElementById('telemetryHint');
 const finite = (value, low, high) => Number.isFinite(Number(value)) ? Math.max(low, Math.min(high, Number(value))) : 0;
 function clearTelemetry() {
+  feedbackRoad = {speed:0,kerb:0,seenAt:0};
   telemetryStripEl.classList.add('stale');
   gearIndicatorEl.textContent = '—'; speedValueEl.textContent = '—'; rpmValueEl.textContent = '— RPM';
   rpmLeds.forEach(led=>led.classList.remove('lit')); rpmLedsEl.classList.remove('shift');
@@ -830,6 +859,7 @@ function clearTelemetry() {
 function onTelemetry(snapshot) {
   if (snapshot.valid !== true) { clearTelemetry(); return; }
   telemetrySeenAt = Date.now();
+  feedbackRoad = {speed:finite(snapshot.spd,0,500),kerb:Array.isArray(snapshot.surfaceTypes)?snapshot.surfaceTypes.slice(0,4).filter(value=>value===1).length:0,seenAt:telemetrySeenAt};
   telemetryStripEl.classList.remove('stale');
   telemetryHintEl.textContent = '实时游戏遥测';
   const speed = Math.round(finite(snapshot.spd,0,500));
@@ -949,6 +979,7 @@ const throttlePedal = createPedal(document.getElementById('throttleZone'), throt
 
 let sendFrame = 0;
 function resetQuickPedals() {
+  stopRaceFeedback();
   controls.fullThrottle = false;
   controls.fullBrake = false;
   throttlePedal.reset();
@@ -1023,6 +1054,7 @@ function connect() {
   };
 }
 window.__nativeReconnect = () => {
+  feedbackPaused=false;
   window.__nativeLastError = '';
   document.getElementById('settingsOverlay').classList.remove('open');
   if (running) connect();
@@ -1169,6 +1201,7 @@ function sendLoop() {
 }
 
 function sendControlSnapshot(throttleValue, brakeValue) {
+  updateRaceFeedback(throttleValue, brakeValue);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({
       a: normalized,
@@ -1201,6 +1234,7 @@ preferLandscape();
 
 async function start() {
   if (running) return;
+  feedbackPaused=false;
   if (typeof window.__nativeRequestMotion === 'function') {
     await window.__nativeRequestMotion();
   } else if (typeof DeviceMotionEvent !== 'undefined' &&
@@ -1279,13 +1313,15 @@ function openSettings() {
   resetQuickPedals(); brakePedal.reset(); throttlePedal.reset();
   Object.keys(controls).forEach(key=>controls[key]=false);
   renderPedalReadouts(0,0); sendControlSnapshot(0,0);
+  feedbackPaused=true;
+  stopRaceFeedback();
   document.getElementById('settingsOverlay').classList.add('open');
 }
-function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+function closeSettings() { feedbackPaused=false; document.getElementById('settingsOverlay').classList.remove('open'); }
 document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('settingsOverlay').addEventListener('click',event=>{if(event.target.id==='settingsOverlay')closeSettings();});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSettings();});
-document.getElementById('closeSettingsBtn').addEventListener('click', () => document.getElementById('settingsOverlay').classList.remove('open'));
+document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
 document.getElementById('calBtn2').addEventListener('click', calibrate);
 document.getElementById('certBtn2').addEventListener('click', openCertTab);
 document.getElementById('fullscreenBtn2').addEventListener('click', toggleFullscreen);
@@ -1303,6 +1339,7 @@ function showConnectionDetails() {
   Object.keys(controls).forEach(key=>controls[key]=false);
   renderPedalReadouts(0,0); sendControlSnapshot(0,0);
   document.getElementById('connectionDetailsText').textContent = document.getElementById('statusText2').textContent;
+  feedbackPaused=true; stopRaceFeedback();
   document.getElementById('connectionDetails').showModal();
 }
 document.getElementById('driveStatus').addEventListener('click', showConnectionDetails);
@@ -1310,6 +1347,7 @@ document.getElementById('driveStatus').addEventListener('keydown', event => {
   if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showConnectionDetails(); }
 });
 document.getElementById('connectionDetailsClose').addEventListener('click', () => document.getElementById('connectionDetails').close());
+document.getElementById('connectionDetails').addEventListener('close', () => { feedbackPaused=false; });
 
 applyTranslations();
 applyAnalogPedalShape();
