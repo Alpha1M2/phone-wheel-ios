@@ -117,6 +117,14 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             self.closeSocket()
             self.web.evaluateJavaScript("if(typeof stop==='function')stop();", completionHandler: nil)
         })
+        alert.addAction(UIAlertAction(title: "返回", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func showHapticSettings() {
+        guard presentedViewController == nil else { return }
+        let alert = UIAlertController(title: "震动设置", message:
+            hapticsEnabled ? "震动反馈已开启。" : "震动反馈已关闭。", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: hapticsEnabled ? "关闭震动" : "开启震动", style: .default) { [weak self] _ in
             guard let self = self else { return }
             self.hapticsEnabled.toggle()
@@ -141,7 +149,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         guard message.frameInfo.isMainFrame,
               let body = message.body as? [String: Any], let kind = body["kind"] as? String else { return }
         switch kind {
-        case "settings": showConnectionSettings()
+        case "networkSettings": showConnectionSettings()
+        case "hapticSettings": showHapticSettings()
         case "motion": startMotion()
         case "tap": playHaptic([12])
         case "haptic":
@@ -338,12 +347,12 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         let code = """
         ['certBtn','certBtn2','fullscreenBtn1','fullscreenBtn2'].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display='none';});
-        if(!document.getElementById('nativeSettings')){
-          const b=document.createElement('button'); b.id='nativeSettings';
-          b.textContent='电脑连接 / 震动设置'; b.style.gridColumn='1 / span 2';
-          b.onclick=()=>window.webkit.messageHandlers.phoneWheel.postMessage({kind:'settings'});
-          document.getElementById('settingsPanel').prepend(b);
-        }
+        [['nativeNetworkSettings','网络连接','networkSettings'],['nativeHapticSettings','震动设置','hapticSettings']].forEach(([id,title,kind])=>{
+          if(document.getElementById(id))return;
+          const b=document.createElement('button'); b.id=id; b.textContent=title;
+          b.onclick=()=>window.webkit.messageHandlers.phoneWheel.postMessage({kind});
+          document.getElementById('settingsPanel').append(b);
+        });
         """
         web.evaluateJavaScript(code, completionHandler: nil)
     }

@@ -882,6 +882,7 @@ function connect() {
  * ------------------------------------------------------------------- */
 let rollEstimate = 0;
 let hasRollReading = false;
+let autoCalibratePending = false;
 
 function onMotion(event) {
   const g = event.accelerationIncludingGravity;
@@ -893,9 +894,15 @@ function onMotion(event) {
   if (!hasRollReading) {
     rollEstimate = raw;
     hasRollReading = true;
-    return;
+  } else {
+    rollEstimate = raw + Math.round((rollEstimate - raw) / 360) * 360;
   }
-  rollEstimate = raw + Math.round((rollEstimate - raw) / 360) * 360;
+  if (autoCalibratePending) {
+    calibrate();
+    autoCalibratePending = false;
+    steerSmoothed = 0;
+    normalized = 0;
+  }
 }
 
 function currentRollDegrees() {
@@ -957,7 +964,7 @@ function updateSteeringRange() {
 
 function sendLoop() {
   if (!running) return;
-  let relative = currentRollDegrees() - calibrationOffset;
+  let relative = autoCalibratePending ? 0 : currentRollDegrees() - calibrationOffset;
   if (inverted) relative = -relative;
   const linear = Math.max(-1, Math.min(1, relative / maxAngleDeg));
   const curved = applySteerCurve(linear);
@@ -1023,8 +1030,12 @@ async function start() {
     }
   }
   preferLandscape();
+  // Center against the first fresh sensor sample after every start.
+  hasRollReading = false;
+  autoCalibratePending = true;
+  steerSmoothed = 0;
+  normalized = 0;
   window.addEventListener('devicemotion', onMotion);
-  calibrate();
   connect();
   running = true;
   setupScreen.style.display = 'none';
@@ -1034,6 +1045,7 @@ async function start() {
 
 function stop() {
   running = false;
+  autoCalibratePending = false;
   cancelAnimationFrame(sendFrame);
   resetQuickPedals();
   brakePedal.reset();
