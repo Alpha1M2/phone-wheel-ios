@@ -865,6 +865,7 @@ function showGameAssistGuide() {
 // this removes most of that jitter with only a couple of frames of latency.
 // Adaptive filtering is applied once per sensor sample, using elapsed time.
 let steerSmoothed = 0;
+let steeringLockSide = 0;
 
 function applySteerCurve(x) {
   if (Math.abs(x) < STEER_DEADZONE) return 0;
@@ -936,7 +937,8 @@ function updateRaceFeedback(throttle, brake) {
   // EA surface type 1 means rumble strip. Road feedback needs fresh moving-car telemetry.
   const kerb=allowed && now-feedbackRoad.seenAt<250 && feedbackRoad.speed>5 ? feedbackRoad.kerb : 0;
   const road=kerb>0 ? Math.min(0.72, (0.34+0.09*kerb)*Math.min(1,feedbackRoad.speed/90)) : 0;
-  const intensity=Math.min(0.9,Math.max(throttle*0.16,brake*0.4)+road);
+  const background=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250 ? 0.055 : 0;
+  const intensity=Math.min(0.9,background+Math.max(throttle*0.16,brake*0.4)+road);
   const sharpness=road>0?0.88:brake>0?0.65:0.22;
   const frame={intensity,sharpness,roughness:road>0?1:0};
   const changed=Math.abs(frame.intensity-lastFeedback.intensity)>0.015 || frame.roughness!==lastFeedback.roughness || (intensity>0 && frame.sharpness!==lastFeedback.sharpness);
@@ -1098,6 +1100,7 @@ const throttlePedal = createPedal(document.getElementById('throttleZone'), throt
 
 let sendFrame = 0;
 function resetQuickPedals() {
+  steeringLockSide=0;
   stopRaceFeedback();
   controls.fullThrottle = false;
   controls.fullBrake = false;
@@ -1294,11 +1297,23 @@ function updateSteeringRange() {
   document.getElementById('steeringRange').textContent = '满转向 ±' + maxAngleDeg + '°' + (steeringAssistMode==='stable' ? ' · 稳定' : '');
 }
 
+function updateSteeringLockCue(relative) {
+  if (!running || document.hidden || feedbackPaused || autoCalibratePending || !lastMotionAt || Date.now()-lastMotionAt>250 || ws?.readyState!==WebSocket.OPEN) { steeringLockSide=0; return; }
+  const amount=Math.abs(relative)/maxAngleDeg;
+  if (amount<0.88) { steeringLockSide=0; return; }
+  const side=Math.sign(relative);
+  if (amount>=1 && side!==steeringLockSide) {
+    steeringLockSide=side;
+    if (typeof window.__nativeSteeringLimit==='function') window.__nativeSteeringLimit();
+    else if (navigator.vibrate) navigator.vibrate(140);
+  }
+}
 function updateSteeringValue() {
   const relative = autoCalibratePending || !lastMotionAt || Date.now()-lastMotionAt>250 ? 0 : filteredRoll;
   const linear = Math.max(-1, Math.min(1, relative / maxAngleDeg));
   steerSmoothed = applySteerCurve(linear);
   normalized = steerSmoothed;
+  updateSteeringLockCue(relative);
 }
 function sendLoop() {
   if (!running) return;
@@ -1417,6 +1432,7 @@ function updateAnglePresetButtons() {
 }
 
 function setMaxAngleDeg(deg) {
+  steeringLockSide=0;
   maxAngleDeg = deg;
   localStorage.setItem('maxAngleDeg', String(deg));
   updateAnglePresetButtons();

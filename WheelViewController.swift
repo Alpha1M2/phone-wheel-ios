@@ -15,6 +15,9 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private var engine: CHHapticEngine?
     private var feedbackPlayer: CHHapticAdvancedPatternPlayer?
     private var curbPlayer: CHHapticPatternPlayer?
+    private var limitPlayer: CHHapticPatternPlayer?
+    private var lastLimitCueAt = 0.0
+    private var limitCueUntil = 0.0
     private var lastCurbImpactAt = 0.0
     private var feedbackTimer: DispatchSourceTimer?
     private var feedbackUpdatedAt = 0.0
@@ -139,15 +142,15 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private func showHapticSettings() {
         guard presentedViewController == nil else { return }
         let alert = UIAlertController(title: "震动设置", message:
-            hapticsEnabled ? "震动反馈已开启。" : "震动反馈已关闭。", preferredStyle: .alert)
+            hapticsEnabled ? "背景、踏板、路肩与满转向提示已开启。" : "震动反馈已关闭。", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: hapticsEnabled ? "关闭震动" : "开启震动", style: .default) { [weak self] _ in
             guard let self = self else { return }
             self.hapticsEnabled.toggle()
             if !self.hapticsEnabled { self.stopAllRaceFeedback() }
             if self.hapticsEnabled { self.playHaptic([90]) }
         })
-        alert.addAction(UIAlertAction(title: "测试震动", style: .default) { [weak self] _ in
-            self?.playHaptic([120, 80, 120], force: true)
+        alert.addAction(UIAlertAction(title: "测试满转向提示", style: .default) { [weak self] _ in
+            self?.playSteeringLimitCue(force: true)
         })
         alert.addAction(UIAlertAction(title: "测试路肩震动", style: .default) { [weak self] _ in
             self?.playCurbImpact(1, force: true)
@@ -173,6 +176,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         case "motion": startMotion()
         case "stopMotion": stopMotion()
         case "tap": playHaptic([12])
+        case "steeringLimit": playSteeringLimitCue()
         case "curbImpact":
             playCurbImpact(body["strength"] as? Double ?? 0.8)
         case "raceFeedback":
@@ -275,8 +279,9 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
         ], relativeTime: 0, duration: 30)
         // Embed initial gain so the first frame cannot produce a full-strength jolt.
+        let initialGain: Float = ProcessInfo.processInfo.systemUptime < limitCueUntil ? 0 : feedbackIntensity
         let pattern = try CHHapticPattern(events: [event], parameters: [
-            CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: feedbackIntensity, relativeTime: 0),
+            CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: initialGain, relativeTime: 0),
             CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: feedbackSharpness - 0.5, relativeTime: 0)
         ])
         let player = try engine.makeAdvancedPlayer(with: pattern)
@@ -291,6 +296,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
               now - feedbackUpdatedAt < 0.25, socket != nil else {
             stopRaceFeedback(); return
         }
+        guard feedbackPlayer != nil else { return }
         do {
             if now - feedbackStartedAt > 25 {
                 try? feedbackPlayer?.stop(atTime: CHHapticTimeImmediate)
@@ -299,7 +305,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             }
             // A rumble-strip texture modulates continuous pedal resistance at 16 Hz.
             let pulse = Float(0.5 + 0.5 * sin(now * 2 * Double.pi * 16))
-            let gain = feedbackIntensity * (1 - 0.65 * feedbackRoughness + 0.65 * feedbackRoughness * pulse)
+            let gain: Float = now < limitCueUntil ? 0 : feedbackIntensity * (1 - 0.65 * feedbackRoughness + 0.65 * feedbackRoughness * pulse)
             try feedbackPlayer?.sendParameters([
                 CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: gain, relativeTime: 0),
                 CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: feedbackSharpness - 0.5, relativeTime: 0)
@@ -311,7 +317,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         let now = ProcessInfo.processInfo.systemUptime
         guard (hapticsEnabled || force), UIApplication.shared.applicationState == .active,
               (socket != nil || force), requestedStrength.isFinite,
-              now - lastCurbImpactAt >= 0.1,
+              (force || now >= limitCueUntil), now - lastCurbImpactAt >= 0.1,
               CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
         let strength = Float(min(1, max(0.35, requestedStrength)))
         do {
@@ -341,10 +347,37 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         }
     }
 
+    private func playSteeringLimitCue(force: Bool = false) {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard (hapticsEnabled || force), UIApplication.shared.applicationState == .active,
+              (socket != nil || force), now - lastLimitCueAt >= 0.2,
+              CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        do {
+            let engine = try prepareHapticEngine()
+            let event = CHHapticEvent(eventType: .hapticContinuous, parameters: [
+                CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.75),
+                CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.18)
+            ], relativeTime: 0, duration: 0.14)
+            let pattern = try CHHapticPattern(events: [event], parameters: [])
+            let player = try engine.makePlayer(with: pattern)
+            try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
+            curbPlayer = nil
+            try? limitPlayer?.stop(atTime: CHHapticTimeImmediate)
+            limitPlayer = player
+            limitCueUntil = now + 0.16
+            renderRaceFeedback()
+            try player.start(atTime: CHHapticTimeImmediate)
+            lastLimitCueAt = now
+        } catch { limitPlayer = nil; limitCueUntil = 0 }
+    }
+
     private func stopAllRaceFeedback() {
         stopRaceFeedback()
         try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
         curbPlayer = nil
+        try? limitPlayer?.stop(atTime: CHHapticTimeImmediate)
+        limitPlayer = nil
+        limitCueUntil = 0
     }
 
     private func stopRaceFeedback() {

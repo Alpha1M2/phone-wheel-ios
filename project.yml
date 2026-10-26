@@ -46,8 +46,8 @@ targets:
         INFOPLIST_KEY_UIRequiresFullScreen: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        MARKETING_VERSION: '0.3.9'
-        CURRENT_PROJECT_VERSION: '18'
+        MARKETING_VERSION: '0.3.10'
+        CURRENT_PROJECT_VERSION: '19'
     dependencies:
       - sdk: UIKit.framework
       - sdk: WebKit.framework

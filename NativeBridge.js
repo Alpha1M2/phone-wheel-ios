@@ -30,6 +30,7 @@
     socket.dispatchEvent(event);
     if (typeof socket['on'+kind] === 'function') socket['on'+kind](event);
   };
+  window.__nativeSteeringLimit = () => post({kind:'steeringLimit'});
   window.__nativeCurbImpact = frame => post({kind:'curbImpact', ...frame});
   window.__nativeRaceFeedback = frame => post({kind:'raceFeedback', ...frame});
   Object.defineProperty(navigator, 'vibrate', {configurable:true, value:(pattern) => {
