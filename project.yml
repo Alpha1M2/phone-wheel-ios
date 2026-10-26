@@ -1,6 +1,6 @@
 name: PhoneWheel
 options:
-  preGenCommand: python3 prepare-assets.py
+  preGenCommand: bash verify-transport.sh
   bundleIdPrefix: io.phonewheel.personal
   deploymentTarget:
     iOS: '16.4'
@@ -11,6 +11,7 @@ targets:
     sources:
       - path: AppDelegate.swift
       - path: WheelViewController.swift
+      - path: PinnedWebSocket.swift
       - path: NativeBridge.js
       - path: index.html
       - path: Assets.xcassets
@@ -45,11 +46,12 @@ targets:
         INFOPLIST_KEY_UIRequiresFullScreen: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        MARKETING_VERSION: '0.2.1'
-        CURRENT_PROJECT_VERSION: '8'
+        MARKETING_VERSION: '0.3.0'
+        CURRENT_PROJECT_VERSION: '9'
     dependencies:
       - sdk: UIKit.framework
       - sdk: WebKit.framework
+      - sdk: Network.framework
       - sdk: CoreMotion.framework
       - sdk: CoreHaptics.framework
       - sdk: CryptoKit.framework

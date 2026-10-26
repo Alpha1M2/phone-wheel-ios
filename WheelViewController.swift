@@ -4,20 +4,22 @@ import CoreMotion
 import CoreHaptics
 import CryptoKit
 import Security
+import Network
 
 final class WheelViewController: UIViewController, WKScriptMessageHandler,
-                                 WKNavigationDelegate, URLSessionWebSocketDelegate {
+                                 WKNavigationDelegate {
     private var web: WKWebView!
     private let motion = CMMotionManager()
     private var engine: CHHapticEngine?
-    private var socket: URLSessionWebSocketTask?
+    private var socket: PinnedWebSocket?
     private var socketID: String?
     private var endpoint: URL?
     private var firstAppearance = true
     private var sendInFlight = false
     private var pendingInput: String?
     private var lastHaptic = Date.distantPast
-    private var session: URLSession?
+    private var trustPrompt: UIAlertController?
+    private var trustDecision: ((Bool) -> Void)?
     private var hapticsEnabled: Bool {
         get { UserDefaults.standard.object(forKey: "haptics") as? Bool ?? true }
         set { UserDefaults.standard.set(newValue, forKey: "haptics") }
@@ -231,27 +233,38 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             emit(id, "error"); emit(id, "close"); showConnectionSettings(); return
         }
         socketID = id
-        let config = URLSessionConfiguration.ephemeral
-        config.urlCache = nil
-        config.requestCachePolicy = .reloadIgnoringLocalCacheData
-        config.timeoutIntervalForRequest = 60
-        config.timeoutIntervalForResource = 90
-        let connectionSession = URLSession(configuration: config, delegate: self,
-                                           delegateQueue: OperationQueue.main)
-        session = connectionSession
-        let task = connectionSession.webSocketTask(with: url)
-        socket = task
-        task.resume()
-        receive(task, id: id)
+        let client = PinnedWebSocket(url: url, verify: { [weak self] trust, reply in
+            guard let self = self, self.socketID == id, let host = url.host else { reply(false); return }
+            self.verifyLocalServer(trust, host: host, reply: reply)
+        }, onOpen: { [weak self] in
+            guard let self = self, self.socketID == id else { return }
+            self.emit(id, "open")
+        }, onMessage: { [weak self] text in
+            guard let self = self, self.socketID == id else { return }
+            self.emit(id, "message", text)
+        }, onFailure: { [weak self] error in
+            guard let self = self, self.socketID == id else { return }
+            self.reportConnectionError(error)
+            self.emit(id, "error")
+            self.closeSocket()
+        }, onClose: { [weak self] in
+            guard let self = self, self.socketID == id else { return }
+            self.closeSocket()
+        })
+        socket = client
+        client.start()
     }
 
     private func closeSocket() {
         let previous = socketID
         socketID = nil
-        socket?.cancel(with: .goingAway, reason: nil)
+        let decision = trustDecision
+        trustDecision = nil
+        decision?(false)
+        trustPrompt?.dismiss(animated: true)
+        trustPrompt = nil
+        socket?.close()
         socket = nil
-        session?.invalidateAndCancel()
-        session = nil
         pendingInput = nil
         sendInFlight = false
         if let id = previous { emit(id, "close") }
@@ -261,39 +274,20 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         guard !sendInFlight, let text = pendingInput, let task = socket else { return }
         pendingInput = nil
         sendInFlight = true
-        task.send(.string(text)) { [weak self, weak task] error in
-            DispatchQueue.main.async {
-                guard let self = self, self.socket === task else { return }
-                self.sendInFlight = false
-                if let error = error { self.reportConnectionError(error); self.closeSocket() } else { self.flushInput() }
-            }
-        }
-    }
-
-    private func receive(_ task: URLSessionWebSocketTask, id: String) {
-        task.receive { [weak self, weak task] result in
-            DispatchQueue.main.async {
-                guard let self = self, let task = task, self.socket === task else { return }
-                switch result {
-                case .success(let message):
-                    switch message {
-                    case .string(let text): self.emit(id, "message", text)
-                    case .data(let data):
-                        if let text = String(data: data, encoding: .utf8) { self.emit(id, "message", text) }
-                    @unknown default: break
-                    }
-                    self.receive(task, id: id)
-                case .failure(let error):
-                    self.reportConnectionError(error)
-                    self.emit(id, "error")
-                    self.closeSocket()
-                }
-            }
+        task.send(text) { [weak self, weak task] error in
+            guard let self = self, self.socket === task else { return }
+            self.sendInFlight = false
+            if let error = error { self.reportConnectionError(error); self.closeSocket() }
+            else { self.flushInput() }
         }
     }
 
     private func reportConnectionError(_ error: Error) {
-        let failure = error as NSError
+        let failure: NSError
+        if let networkError = error as? NWError, case .tls(let code) = networkError {
+            let message = SecCopyErrorMessageString(code, nil) as String? ?? "未知 TLS 错误"
+            failure = NSError(domain: "TLS", code: Int(code), userInfo: [NSLocalizedDescriptionKey: message])
+        } else { failure = error as NSError }
         let hint: String
         switch failure.code {
         case NSURLErrorNotConnectedToInternet:
@@ -313,63 +307,36 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         }
     }
 
-    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask,
-                    didOpenWithProtocol negotiatedProtocol: String?) {
-        if socket === webSocketTask, let id = socketID { emit(id, "open") }
-    }
-    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask,
-                    didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
-        if socket === webSocketTask { closeSocket() }
-    }
-
-    func urlSession(_ session: URLSession, task: URLSessionTask,
-                    didReceive challenge: URLAuthenticationChallenge,
-                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        handleTrustChallenge(challenge, completionHandler: completionHandler)
-    }
-
-    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge,
-                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        handleTrustChallenge(challenge, completionHandler: completionHandler)
-    }
-
-    private func handleTrustChallenge(_ challenge: URLAuthenticationChallenge,
-                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-              challenge.protectionSpace.host == endpoint?.host,
-              let trust = challenge.protectionSpace.serverTrust,
-              let cert = SecTrustGetCertificateAtIndex(trust, 0) else {
-            completionHandler(.performDefaultHandling, nil); return
+    private func verifyLocalServer(_ trust: SecTrust, host: String, reply: @escaping (Bool) -> Void) {
+        guard host == endpoint?.host, let cert = SecTrustGetCertificateAtIndex(trust, 0) else {
+            reply(false); return
         }
         let der = SecCertificateCopyData(cert) as Data
         let fingerprint = SHA256.hash(data: der).map { String(format: "%02x", $0) }.joined()
-        let key = "certificate:" + challenge.protectionSpace.host
+        let key = "certificate:" + host
         if UserDefaults.standard.string(forKey: key) == fingerprint {
-            acceptApprovedCertificate(trust, certificate: cert, completionHandler: completionHandler)
-            return
+            reply(true); return
         }
-        guard presentedViewController == nil else {
-            completionHandler(.cancelAuthenticationChallenge, nil); return
-        }
+        guard presentedViewController == nil else { reply(false); return }
         let alert = UIAlertController(title: "核对电脑证书", message:
             "仅在此地址属于你的电脑，且下面 SHA-256 与电脑显示的指纹一致时信任。\n\n" + fingerprint,
             preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "指纹一致，信任此电脑", style: .default) { _ in
+        trustDecision = reply
+        trustPrompt = alert
+        alert.addAction(UIAlertAction(title: "指纹一致，信任此电脑", style: .default) { [weak self] _ in
+            guard let self = self, let decision = self.trustDecision else { return }
+            self.trustDecision = nil
+            self.trustPrompt = nil
             UserDefaults.standard.set(fingerprint, forKey: key)
-            self.acceptApprovedCertificate(trust, certificate: cert, completionHandler: completionHandler)
+            decision(true)
         })
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel) { _ in
-            completionHandler(.cancelAuthenticationChallenge, nil)
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel) { [weak self] _ in
+            guard let self = self, let decision = self.trustDecision else { return }
+            self.trustDecision = nil
+            self.trustPrompt = nil
+            decision(false)
         })
         present(alert, animated: true)
-    }
-
-    private func acceptApprovedCertificate(_ trust: SecTrust, certificate: SecCertificate,
-                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        // Both call sites require the exact SHA-256 fingerprint explicitly approved
-        // for this private host. Accept that pinned credential as documented by Apple;
-        // a public-CA chain evaluation would reject this deliberately self-signed leaf.
-        completionHandler(.useCredential, URLCredential(trust: trust))
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,

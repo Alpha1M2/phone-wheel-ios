@@ -427,6 +427,22 @@
   .menu-section { padding:9px; }
   #settingsPanel button { min-height:40px; }
 
+
+  /* Left-hand controls: D-pad, vertical gear paddles, then nearby race functions. */
+  #controlDeck { display:grid; grid-template-columns:clamp(96px,calc(27 * var(--wheel-vh)),112px) clamp(100px,calc(27 * var(--wheel-vh)),118px) minmax(0,1fr); gap:10px; align-items:stretch; }
+  #dpadRow { width:100%; height:auto; aspect-ratio:1; align-self:center; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); }
+  #shiftStack { order:-2; display:grid; grid-template-rows:1fr 1fr; gap:8px; }
+  #shiftStack .face-button { width:100%; min-height:58px; display:grid; grid-template-columns:30px minmax(0,1fr); grid-template-rows:auto auto; column-gap:6px; row-gap:2px; align-content:center; padding:7px; text-align:left; }
+  #shiftStack .face-button::before { grid-row:1 / 3; align-self:center; }
+  #shiftStack .face-button span { font-size:16px; white-space:nowrap; }
+  #shiftStack .face-note { grid-column:2; font-size:8px; }
+  #gearUpBtn { background:#13241e; border-color:#315f49; }
+  #gearDownBtn { background:#152234; border-color:#354f73; }
+  #buttonCluster { max-width:320px; width:100%; gap:8px; }
+  #faceButtonRow { justify-content:flex-start; }
+  #faceButtonRow .face-button { min-height:80px; }
+  #shoulderRow { gap:6px; }
+
 </style>
 </head>
 <body>
@@ -518,12 +534,14 @@
     <div id="telemetryHint">等待游戏遥测 · 转向和踏板可正常使用</div>
 
     <div id="controlDeck">
+      <div id="shiftStack">
+        <div id="gearUpBtn" class="face-button" role="button" tabindex="0" data-pad="A" aria-label="A — Confirm / Gear up"><span data-i18n="gearUp">GEAR UP</span><small class="face-note" data-i18n="noteA"></small></div>
+        <div id="gearDownBtn" class="face-button" role="button" tabindex="0" data-pad="X" aria-label="X — Gear down"><span data-i18n="gearDown">GEAR DOWN</span><small class="face-note" data-i18n="noteX"></small></div>
+      </div>
       <div id="buttonCluster">
         <div id="faceButtonRow">
-          <div id="gearDownBtn" class="face-button" role="button" tabindex="0" data-pad="X" aria-label="X — Gear down"><span data-i18n="gearDown">GEAR DOWN</span><small class="face-note" data-i18n="noteX"></small></div>
           <div id="drsPitBtn" class="face-button" role="button" tabindex="0" data-pad="Y" aria-label="Y — DRS / Pit limiter"><span data-i18n="drsPit">DRS / PIT</span><small class="face-note" data-i18n="noteY"></small></div>
           <div id="mfdBtn" class="face-button" role="button" tabindex="0" data-pad="B" aria-label="B — Back / MFD"><span data-i18n="mfd">MFD</span><small class="face-note" data-i18n="noteB"></small></div>
-          <div id="gearUpBtn" class="face-button" role="button" tabindex="0" data-pad="A" aria-label="A — Confirm / Gear up"><span data-i18n="gearUp">GEAR UP</span><small class="face-note" data-i18n="noteA"></small></div>
         </div>
         <div id="shoulderRow">
           <div id="overtakeBtn" class="action-btn shoulder-button" role="button" tabindex="0" data-pad="LB" aria-label="Left bumper — Overtake"><span data-i18n="overtake">OVERTAKE</span><small data-i18n="leftShoulder">左肩键</small></div>
@@ -577,7 +595,7 @@ const STRINGS = {
     connecting:'正在连接电脑…', connectionFailed:'连接失败，正在重试', motionDenied:'运动权限未允许',
     steeringLabel:'转向', hint:'横屏握稳手机，点击开始，再校准当前姿势为中心。',
     start:'开始驾驶', calibrate:'校准中心', invert:'反转转向', verifyWs:'检查连接页面',
-    driving:'驾驶中', gearDown:'降挡', gearUp:'升挡', drsPit:'DRS / 限速',
+    driving:'驾驶中', gearDown:'降挡 ↓', gearUp:'升挡 ↑', drsPit:'DRS / 限速',
     overtake:'超车', lookBack:'向后看', radio:'无线电', mfd:'多功能屏',
     brake:'刹车', throttle:'油门', steeringAngleLabel:'转向角度（单侧）',
     analogPedalsOn:'模拟踏板：开启', analogPedalsOff:'模拟踏板：关闭',

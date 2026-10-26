@@ -46,3 +46,8 @@ GitHub 公共仓库标准 macOS runner 免费；私人仓库按账号额度计�
 
 网页上游：https://github.com/yahyio/phone-wheel ，MIT，原许可位于 LICENSE-upstream。
 本包新增代码也按 MIT 许可发布，见 LICENSE。
+
+## 0.3.0
+
+升挡在上、降挡在下并靠近左手，方向键和常用赛车功能集中在左侧与中部；右手保留油门操作区。
+原生连接使用 Network.framework 的加密 WebSocket，按用户明确确认的 SHA-256 校验局域网电脑证书，并自动回复 Ping。不会切换到明文连接。
