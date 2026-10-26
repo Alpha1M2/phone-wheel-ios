@@ -443,6 +443,15 @@
   #faceButtonRow .face-button { min-height:80px; }
   #shoulderRow { gap:6px; }
 
+
+  #topAuxButtons { position:absolute; z-index:2; top:max(6px,var(--wheel-safe-top)); left:calc(var(--wheel-safe-left) + min(calc(26 * var(--wheel-vw)),calc(25 * var(--wheel-vh)))); display:flex; gap:10px; }
+  #topAuxButtons .action-btn { flex:none; width:clamp(68px,calc(20 * var(--wheel-vh)),88px); height:clamp(42px,calc(13 * var(--wheel-vh)),54px); padding:3px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:2px; }
+  #topAuxButtons .shoulder-button::before { min-width:25px; height:17px; font-size:11px; margin:0; }
+  #topAuxButtons .shoulder-button span { font-size:12px; font-weight:800; }
+  #topAuxButtons .shoulder-button small { font-size:7px; line-height:1; }
+  #shoulderRow { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+  #lookBackBtn { grid-column:1; }
+
 </style>
 </head>
 <body>
@@ -497,6 +506,11 @@
     </div>
   </div>
 
+  <div id="topAuxButtons">
+    <div id="overtakeBtn" class="action-btn shoulder-button" role="button" tabindex="0" data-pad="LB" aria-label="Left bumper — Overtake"><span data-i18n="overtake">OVERTAKE</span><small data-i18n="leftShoulder">左肩键</small></div>
+    <div id="radioBtn" class="action-btn shoulder-button" role="button" tabindex="0" data-pad="RB" aria-label="Right bumper — Radio"><span data-i18n="radio">RADIO</span><small data-i18n="rightShoulder">右肩键</small></div>
+  </div>
+
   <div id="driveMid">
     <div id="instrumentRow">
       <div class="steering-side">
@@ -544,9 +558,7 @@
           <div id="mfdBtn" class="face-button" role="button" tabindex="0" data-pad="B" aria-label="B — Back / MFD"><span data-i18n="mfd">MFD</span><small class="face-note" data-i18n="noteB"></small></div>
         </div>
         <div id="shoulderRow">
-          <div id="overtakeBtn" class="action-btn shoulder-button" role="button" tabindex="0" data-pad="LB" aria-label="Left bumper — Overtake"><span data-i18n="overtake">OVERTAKE</span><small data-i18n="leftShoulder">左肩键</small></div>
           <div id="lookBackBtn" class="action-btn" role="button" tabindex="0" data-i18n="lookBack">LOOK BACK</div>
-          <div id="radioBtn" class="action-btn shoulder-button" role="button" tabindex="0" data-pad="RB" aria-label="Right bumper — Radio"><span data-i18n="radio">RADIO</span><small data-i18n="rightShoulder">右肩键</small></div>
         </div>
       </div>
     <div id="dpadRow">
