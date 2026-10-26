@@ -26,6 +26,7 @@ async function measure(page,screen,size){
       const el=controls[index],item=items[index];
       if(item.id==='driveStatus')notes.push(`${item.id}: secondary status link, touch minimum exempt (${item.width.toFixed(1)}×${item.height.toFixed(1)})`);
       else if(item.width<43.5||item.height<43.5)violations.push(`${item.id}: touch target ${item.width.toFixed(1)}×${item.height.toFixed(1)} is below 44×44`);
+      if(item.id!=='driveStatus'&&el.scrollWidth>el.clientWidth+1)violations.push(`${item.id}: button content overflows by ${el.scrollWidth-el.clientWidth}px`);
       if(item.x<-.5||item.y<-.5||item.right>innerWidth+.5||item.bottom>innerHeight+.5)violations.push(`${item.id}: outside viewport`);
       // Hit-testing inner points detects an overlay covering a visible control, including transparent overlays.
       for(const [fx,fy] of [[.5,.5],[.2,.2],[.8,.2],[.2,.8],[.8,.8]]){
@@ -100,6 +101,7 @@ async function main(){
           autoCalibratePending=false;lastMotionAt=Date.now();filteredRoll=7;
           controls.fullThrottle=true;sendImmediatePedals();updateSteeringValue();updateSteeringMeter(normalized);
         },size.safe);
+        await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
         await page.screenshot({path:path.join(out,`drive-${size.width}x${size.height}.png`),fullPage:false,animations:'disabled'});
         await measure(page,'drive',size);
         // Exercise the actual settings button, preserving its control-release behavior.

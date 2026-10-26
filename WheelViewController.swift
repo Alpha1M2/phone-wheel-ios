@@ -328,7 +328,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         let now = ProcessInfo.processInfo.systemUptime
         guard (hapticsEnabled || force), UIApplication.shared.applicationState == .active,
               (socket != nil || force), requestedStrength.isFinite,
-              (force || now >= limitCueUntil), now >= curbCueUntil,
+              now >= curbCueUntil,
               now - lastCurbImpactAt >= 0.24,
               CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
         // Two dense, low-sharpness pushes distinguish a curb from the steady pedal layer.
@@ -352,12 +352,15 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             curbPlayer = player
             // Stronger contrast without turning the pedal/background layer fully off.
             curbCueUntil = now + 0.22
+            // Keep the full-lock cue continuous, but quieter under both curb pushes.
+            try? applySteeringLimitGain(at: now)
             renderRaceFeedback()
             try player.start(atTime: CHHapticTimeImmediate)
             lastCurbImpactAt = now
         } catch {
             curbPlayer = nil
             curbCueUntil = 0
+            try? applySteeringLimitGain(at: now)
         }
     }
 
@@ -381,8 +384,12 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         limitUpdatedAt = now
         if force { limitTestUntil = now + 0.8 }
         limitCueUntil = max(now + 0.25, limitTestUntil)
-        try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
-        curbPlayer = nil; curbCueUntil = 0
+        // Only the explicit demonstration isolates the steering texture. Normal 80 ms
+        // heartbeats must leave the curb player running through its entire envelope.
+        if force {
+            try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
+            curbPlayer = nil; curbCueUntil = 0
+        }
         do {
             if limitPlayer == nil {
                 try startSteeringLimitPlayer()
@@ -391,6 +398,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
                 timer.setEventHandler { [weak self] in self?.refreshSteeringLimit() }
                 limitTimer = timer; timer.resume()
             }
+            try applySteeringLimitGain(at: now)
             renderRaceFeedback()
         } catch { stopSteeringLimit() }
     }
@@ -401,7 +409,10 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.75),
             CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.18)
         ], relativeTime: 0, duration: 30)
-        let pattern = try CHHapticPattern(events: [event], parameters: [])
+        let pattern = try CHHapticPattern(events: [event], parameters: [
+            CHHapticDynamicParameter(parameterID: .hapticIntensityControl,
+                value: steeringLimitLayerGain(at: ProcessInfo.processInfo.systemUptime), relativeTime: 0)
+        ])
         let player = try engine.makePlayer(with: pattern)
         try player.start(atTime: CHHapticTimeImmediate)
         limitPlayer = player; limitStartedAt = ProcessInfo.processInfo.systemUptime
@@ -414,11 +425,26 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
               testing || (hapticsEnabled && socket != nil && now - limitUpdatedAt < 0.25) else {
             stopSteeringLimit(); return
         }
-        if now - limitStartedAt > 25 {
-            try? limitPlayer?.stop(atTime: CHHapticTimeImmediate)
-            limitPlayer = nil
-            do { try startSteeringLimitPlayer() } catch { stopSteeringLimit() }
-        }
+        do {
+            if now - limitStartedAt > 25 {
+                try? limitPlayer?.stop(atTime: CHHapticTimeImmediate)
+                limitPlayer = nil
+                try startSteeringLimitPlayer()
+            }
+            // The 25 ms watchdog also restores normal full-lock intensity when a curb ends.
+            try applySteeringLimitGain(at: now)
+        } catch { stopSteeringLimit() }
+    }
+
+    private func steeringLimitLayerGain(at now: Double) -> Float {
+        return now < curbCueUntil ? 0.35 : 1
+    }
+
+    private func applySteeringLimitGain(at now: Double) throws {
+        try limitPlayer?.sendParameters([
+            CHHapticDynamicParameter(parameterID: .hapticIntensityControl,
+                value: steeringLimitLayerGain(at: now), relativeTime: 0)
+        ], atTime: CHHapticTimeImmediate)
     }
 
     private func stopSteeringLimit() {
