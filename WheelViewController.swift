@@ -14,6 +14,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private var motionGeneration = 0
     private var engine: CHHapticEngine?
     private var feedbackPlayer: CHHapticAdvancedPatternPlayer?
+    private var curbPlayer: CHHapticPatternPlayer?
+    private var lastCurbImpactAt = 0.0
     private var feedbackTimer: DispatchSourceTimer?
     private var feedbackUpdatedAt = 0.0
     private var feedbackStartedAt = 0.0
@@ -141,11 +143,14 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         alert.addAction(UIAlertAction(title: hapticsEnabled ? "关闭震动" : "开启震动", style: .default) { [weak self] _ in
             guard let self = self else { return }
             self.hapticsEnabled.toggle()
-            if !self.hapticsEnabled { self.stopRaceFeedback() }
+            if !self.hapticsEnabled { self.stopAllRaceFeedback() }
             if self.hapticsEnabled { self.playHaptic([90]) }
         })
         alert.addAction(UIAlertAction(title: "测试震动", style: .default) { [weak self] _ in
             self?.playHaptic([120, 80, 120], force: true)
+        })
+        alert.addAction(UIAlertAction(title: "测试路肩震动", style: .default) { [weak self] _ in
+            self?.playCurbImpact(1, force: true)
         })
         alert.addAction(UIAlertAction(title: "返回", style: .cancel))
         present(alert, animated: true)
@@ -168,6 +173,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         case "motion": startMotion()
         case "stopMotion": stopMotion()
         case "tap": playHaptic([12])
+        case "curbImpact":
+            playCurbImpact(body["strength"] as? Double ?? 0.8)
         case "raceFeedback":
             guard socket != nil else { stopRaceFeedback(); return }
             updateRaceFeedback(body)
@@ -223,10 +230,10 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         let created = try CHHapticEngine()
         created.playsHapticsOnly = true
         created.resetHandler = { [weak self] in
-            DispatchQueue.main.async { self?.stopRaceFeedback() }
+            DispatchQueue.main.async { self?.stopAllRaceFeedback() }
         }
         created.stoppedHandler = { [weak self] _ in
-            DispatchQueue.main.async { self?.stopRaceFeedback() }
+            DispatchQueue.main.async { self?.stopAllRaceFeedback() }
         }
         try created.start()
         engine = created
@@ -234,6 +241,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     }
 
     private func updateRaceFeedback(_ body: [String: Any]) {
+        if body["stop"] as? Bool == true { stopAllRaceFeedback(); return }
         guard hapticsEnabled, UIApplication.shared.applicationState == .active,
               CHHapticEngine.capabilitiesForHardware().supportsHaptics else {
             stopRaceFeedback(); return
@@ -297,6 +305,46 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
                 CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: feedbackSharpness - 0.5, relativeTime: 0)
             ], atTime: CHHapticTimeImmediate)
         } catch { stopRaceFeedback() }
+    }
+
+    private func playCurbImpact(_ requestedStrength: Double, force: Bool = false) {
+        let now = ProcessInfo.processInfo.systemUptime
+        guard (hapticsEnabled || force), UIApplication.shared.applicationState == .active,
+              (socket != nil || force), requestedStrength.isFinite,
+              now - lastCurbImpactAt >= 0.1,
+              CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        let strength = Float(min(1, max(0.35, requestedStrength)))
+        do {
+            let engine = try prepareHapticEngine()
+            let events = [
+                CHHapticEvent(eventType: .hapticTransient, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: strength),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.95)
+                ], relativeTime: 0),
+                CHHapticEvent(eventType: .hapticTransient, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: strength * 0.85),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.8)
+                ], relativeTime: 0.055),
+                CHHapticEvent(eventType: .hapticContinuous, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: strength * 0.55),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.85)
+                ], relativeTime: 0.015, duration: 0.09)
+            ]
+            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let player = try engine.makePlayer(with: pattern)
+            try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
+            curbPlayer = player
+            try player.start(atTime: CHHapticTimeImmediate)
+            lastCurbImpactAt = now
+        } catch {
+            curbPlayer = nil
+        }
+    }
+
+    private func stopAllRaceFeedback() {
+        stopRaceFeedback()
+        try? curbPlayer?.stop(atTime: CHHapticTimeImmediate)
+        curbPlayer = nil
     }
 
     private func stopRaceFeedback() {
@@ -374,7 +422,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     }
 
     private func closeSocket() {
-        stopRaceFeedback()
+        stopAllRaceFeedback()
         let previous = socketID
         socketID = nil
         let decision = trustDecision

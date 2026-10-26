@@ -918,13 +918,14 @@ let lastShiftBuzzAt = 0;
 
 let feedbackRoad = {speed:0, kerb:0, seenAt:0};
 let feedbackPaused = false;
+let lastCurbImpactAt = 0;
 let lastFeedbackAt = 0;
 let lastFeedback = {intensity:0,sharpness:0,roughness:0};
 function stopRaceFeedback() {
   feedbackRoad = {speed:0,kerb:0,seenAt:0};
   lastFeedback = {intensity:0,sharpness:0,roughness:0};
   lastFeedbackAt = Date.now();
-  if (typeof window.__nativeRaceFeedback==='function') window.__nativeRaceFeedback(lastFeedback);
+  if (typeof window.__nativeRaceFeedback==='function') window.__nativeRaceFeedback({...lastFeedback,stop:true});
 }
 function updateRaceFeedback(throttle, brake) {
   if (typeof window.__nativeRaceFeedback!=='function') return;
@@ -955,6 +956,7 @@ const telemetryHintEl = document.getElementById('telemetryHint');
 const finite = (value, low, high) => Number.isFinite(Number(value)) ? Math.max(low, Math.min(high, Number(value))) : 0;
 function clearTelemetry() {
   steeringAssistSpeed=0;
+  lastCurbImpactAt=0;
   feedbackRoad = {speed:0,kerb:0,seenAt:0};
   telemetryStripEl.classList.add('stale');
   gearIndicatorEl.textContent = '—'; speedValueEl.textContent = '—'; rpmValueEl.textContent = '— RPM';
@@ -969,6 +971,14 @@ function onTelemetry(snapshot) {
   telemetrySeenAt = Date.now();
   steeringAssistSpeed=finite(snapshot.spd,0,500);
   feedbackRoad = {speed:finite(snapshot.spd,0,500),kerb:Array.isArray(snapshot.surfaceTypes)?snapshot.surfaceTypes.slice(0,4).filter(value=>value===1).length:0,seenAt:telemetrySeenAt};
+  // Trigger an explicit impact before another asphalt sample can erase a short curb contact.
+  if (feedbackRoad.kerb>0 && feedbackRoad.speed>5 && running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN && telemetrySeenAt-lastCurbImpactAt>=160) {
+    lastCurbImpactAt=telemetrySeenAt;
+    const strength=Math.min(1,0.65+0.07*feedbackRoad.kerb+0.2*Math.min(1,feedbackRoad.speed/150));
+    if (typeof window.__nativeCurbImpact==='function') window.__nativeCurbImpact({strength});
+    else if (navigator.vibrate) navigator.vibrate([35,20,35]);
+  }
+
   telemetryStripEl.classList.remove('stale');
   telemetryHintEl.textContent = '实时游戏遥测';
   const speed = Math.round(finite(snapshot.spd,0,500));
