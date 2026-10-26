@@ -33,6 +33,9 @@
   window.__nativeSteeringLimit = active => post({kind:'steeringLimit',active:!!active});
   window.__nativeCurbImpact = frame => post({kind:'curbImpact', ...frame});
   window.__nativeRaceFeedback = frame => post({kind:'raceFeedback', ...frame});
+  window.__nativeShiftFeedback = () => {
+    if(window.controlsEnabled?.()) post({kind:'shift'});
+  };
   Object.defineProperty(navigator, 'vibrate', {configurable:true, value:(pattern) => {
     post({kind:'haptic', pattern}); return true;
   }});
@@ -52,6 +55,10 @@
     window.dispatchEvent(event);
   };
   document.addEventListener('pointerdown', event => {
+    if (event.target.closest?.('#gearUpBtn,#gearDownBtn')) {
+      window.__nativeShiftFeedback();
+      return;
+    }
     if (event.target.closest?.('#throttleZone,#brakeZone,#fullThrottleBtn,#fullBrakeBtn')) {
       if(window.controlsEnabled?.()) post({kind:'pedalTap'});
       return;

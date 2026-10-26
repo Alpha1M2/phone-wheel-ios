@@ -1,10 +1,16 @@
 name: Build iPhone app
 on:
   workflow_dispatch:
+    inputs:
+      check_ui:
+        description: Run phone layout screenshots (leave enabled for layout changes)
+        type: boolean
+        default: true
 permissions:
   contents: read
 jobs:
   ui-check:
+    if: ${{ inputs.check_ui }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

@@ -18,9 +18,12 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private var limitPlayer: CHHapticPatternPlayer?
     private var limitUpdatedAt = 0.0
     private var limitStartedAt = 0.0
+    private var limitPulseStartedAt = 0.0
     private var limitTestUntil = 0.0
     private var limitTimer: DispatchSourceTimer?
     private var pedalTestPlayer: CHHapticPatternPlayer?
+    private var shiftPlayer: CHHapticPatternPlayer?
+    private var lastShiftAt = 0.0
     private var limitCueUntil = 0.0
     private var curbCueUntil = 0.0
     private var lastCurbImpactAt = 0.0
@@ -154,7 +157,10 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             guard let self = self else { return }
             self.hapticsEnabled.toggle()
             if !self.hapticsEnabled { self.stopAllRaceFeedback() }
-            if self.hapticsEnabled { self.playHaptic([90]) }
+            if self.hapticsEnabled {
+                self.prewarmHaptics()
+                self.playHaptic([24])
+            }
         })
         alert.addAction(UIAlertAction(title: "测试背景 → 油门反馈", style: .default) { [weak self] _ in
             self?.testPedalFeedback()
@@ -186,6 +192,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         case "motion": startMotion()
         case "stopMotion": stopMotion()
         case "tap": playHaptic([12])
+        case "shift": playShiftFeedback()
         case "steeringLimit": updateSteeringLimit(active: body["active"] as? Bool ?? true)
         case "pedalTap": if socket != nil { playHaptic([24]) }
         case "curbImpact":
@@ -210,6 +217,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     }
 
     private func startMotion() {
+        prewarmHaptics()
         guard motion.isDeviceMotionAvailable else { showError("此设备不支持融合姿态传感器。"); return }
         guard !motion.isDeviceMotionActive else { return }
         motionGeneration += 1
@@ -253,6 +261,45 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         try created.start()
         engine = created
         return created
+    }
+
+    private func prewarmHaptics() {
+        guard hapticsEnabled, UIApplication.shared.applicationState == .active,
+              CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        do {
+            _ = try prepareHapticEngine()
+            web.evaluateJavaScript("window.__nativeFeedbackReady?.();", completionHandler: nil)
+        } catch { /* The next feedback frame retries engine startup. */ }
+    }
+
+    private func playShiftFeedback() {
+        guard hapticsEnabled, socket != nil, UIApplication.shared.applicationState == .active,
+              CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        let now = ProcessInfo.processInfo.systemUptime
+        // Coalesce the button edge and its returning gear telemetry into one cue.
+        guard now - lastShiftAt >= 0.11 else { return }
+        lastShiftAt = now
+        do {
+            let engine = try prepareHapticEngine()
+            let events = [
+                CHHapticEvent(eventType: .hapticTransient, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.60)
+                ], relativeTime: 0),
+                CHHapticEvent(eventType: .hapticContinuous, parameters: [
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.90),
+                    CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.30)
+                ], relativeTime: 0.008, duration: 0.065)
+            ]
+            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let player = try engine.makePlayer(with: pattern)
+            try? shiftPlayer?.stop(atTime: CHHapticTimeImmediate)
+            shiftPlayer = player
+            try player.start(atTime: CHHapticTimeImmediate)
+        } catch {
+            shiftPlayer = nil
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        }
     }
 
     private func updateRaceFeedback(_ body: [String: Any]) {
@@ -382,7 +429,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             stopSteeringLimit(); return
         }
         limitUpdatedAt = now
-        if force { limitTestUntil = now + 0.8 }
+        if force { limitTestUntil = now + 1.2 }
+        if force || limitPlayer == nil { limitPulseStartedAt = now }
         limitCueUntil = max(now + 0.25, limitTestUntil)
         // Only the explicit demonstration isolates the steering texture. Normal 80 ms
         // heartbeats must leave the curb player running through its entire envelope.
@@ -437,7 +485,12 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     }
 
     private func steeringLimitLayerGain(at now: Double) -> Float {
-        return now < curbCueUntil ? 0.35 : 1
+        // Slow breathing identifies the steering stop without a silent gap. Keep
+        // this phase across input heartbeats and the long-player renewal.
+        let phase = max(0, now - limitPulseStartedAt) * 2.0 * 2.0 * Double.pi
+        let breathing = Float(0.55 + 0.45 * (0.5 + 0.5 * cos(phase)))
+        let curbGain: Float = now < curbCueUntil ? 0.35 : 1
+        return breathing * curbGain
     }
 
     private func applySteeringLimitGain(at now: Double) throws {
@@ -451,6 +504,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         limitTimer?.cancel(); limitTimer = nil
         try? limitPlayer?.stop(atTime: CHHapticTimeImmediate); limitPlayer = nil
         limitCueUntil = 0; limitUpdatedAt = 0; limitTestUntil = 0
+        limitPulseStartedAt = 0
         renderRaceFeedback()
     }
 
@@ -466,7 +520,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
                     CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.12)
                 ], relativeTime: 0, duration: 0.65),
                 CHHapticEvent(eventType: .hapticContinuous, parameters: [
-                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.34),
+                    CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.46),
                     CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.22)
                 ], relativeTime: 0.85, duration: 0.65)
             ]
@@ -485,6 +539,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         stopSteeringLimit()
         try? pedalTestPlayer?.stop(atTime: CHHapticTimeImmediate)
         pedalTestPlayer = nil
+        try? shiftPlayer?.stop(atTime: CHHapticTimeImmediate)
+        shiftPlayer = nil
     }
 
     private func stopRaceFeedback() {

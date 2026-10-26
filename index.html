@@ -921,13 +921,23 @@ button:focus-visible, [role="button"]:focus-visible {
   <main>
     <div id="wheelWrap">
       <svg class="wheel" viewBox="0 0 200 200" id="wheel">
-        <circle class="rim" cx="100" cy="100" r="82"/>
-        <rect class="spoke" x="94" y="18" width="12" height="80" rx="6"/>
-        <rect class="spoke" x="94" y="18" width="12" height="80" rx="6" transform="rotate(120 100 100)"/>
-        <rect class="spoke" x="94" y="18" width="12" height="80" rx="6" transform="rotate(240 100 100)"/>
-        <circle class="hub" cx="100" cy="100" r="20"/>
-        <circle class="mark" cx="100" cy="24" r="4"/>
-      </svg>
+          <path d="M45 68 76 81h48l31-13 20 20-5 39-23 16-23-15H76l-23 15-23-16-5-39Z" fill="#1c242d" stroke="#73818e" stroke-width="3" stroke-linejoin="round"/>
+          <path d="m56 79 22 11h44l22-11M59 126l19-8h44l19 8" fill="none" stroke="#3d4b57" stroke-width="3" stroke-linecap="round"/>
+          <path d="M38 57c-10 0-17 7-20 19L9 113c-3 12 1 20 11 25l19 9c8 4 14 0 18-9l9-22-9-15 6-22-12-17Z" fill="#10171e" stroke="#76828d" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M162 57c10 0 17 7 20 19l9 37c3 12-1 20-11 25l-19 9c-8 4-14 0-18-9l-9-22 9-15-6-22 12-17Z" fill="#10171e" stroke="#76828d" stroke-width="3" stroke-linejoin="round"/>
+          <path d="m31 73-10 40q-2 8 5 12l13 6M169 73l10 40q2 8-5 12l-13 6" fill="none" stroke="#303d49" stroke-width="5" stroke-linecap="round"/>
+          <path d="m48 65 9 15M152 65l-9 15" fill="none" stroke="#ff962f" stroke-width="5" stroke-linecap="round"/>
+          <rect x="78" y="85" width="44" height="28" rx="4" fill="#050b0e" stroke="#53616c" stroke-width="2"/>
+          <path d="M84 92h10m-10 6h6m17-6h9m-9 6h5" fill="none" stroke="#7dc6ca" stroke-width="2" stroke-linecap="round"/>
+          <path d="M88 106h24" stroke="#ff962f" stroke-width="2"/>
+          <rect x="95" y="76" width="10" height="4" rx="1.5" fill="#ff962f"/>
+          <circle cx="69" cy="96" r="4" fill="#ff962f"/>
+          <circle cx="131" cy="96" r="4" fill="#c5d0d8"/>
+          <circle cx="72" cy="112" r="3" fill="#657787"/>
+          <circle cx="128" cy="112" r="3" fill="#657787"/>
+          <circle cx="100" cy="124" r="6" fill="#34424e" stroke="#7a8995" stroke-width="2"/>
+          <path d="M100 120v4" stroke="#ff962f" stroke-width="2" stroke-linecap="round"/>
+        </svg>
     </div>
     <div id="readout">
       <div id="angle">0<span>%</span></div>
@@ -972,12 +982,22 @@ button:focus-visible, [role="button"]:focus-visible {
       <div class="steering-center">
       <div id="miniWheelWrap">
         <svg class="wheel" viewBox="0 0 200 200" id="miniWheel">
-          <circle class="rim" cx="100" cy="100" r="82"/>
-          <rect class="spoke" x="94" y="18" width="12" height="80" rx="6"/>
-          <rect class="spoke" x="94" y="18" width="12" height="80" rx="6" transform="rotate(120 100 100)"/>
-          <rect class="spoke" x="94" y="18" width="12" height="80" rx="6" transform="rotate(240 100 100)"/>
-          <circle class="hub" cx="100" cy="100" r="20"/>
-          <circle class="mark" cx="100" cy="24" r="4"/>
+          <path d="M45 68 76 81h48l31-13 20 20-5 39-23 16-23-15H76l-23 15-23-16-5-39Z" fill="#1c242d" stroke="#73818e" stroke-width="3" stroke-linejoin="round"/>
+          <path d="m56 79 22 11h44l22-11M59 126l19-8h44l19 8" fill="none" stroke="#3d4b57" stroke-width="3" stroke-linecap="round"/>
+          <path d="M38 57c-10 0-17 7-20 19L9 113c-3 12 1 20 11 25l19 9c8 4 14 0 18-9l9-22-9-15 6-22-12-17Z" fill="#10171e" stroke="#76828d" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M162 57c10 0 17 7 20 19l9 37c3 12-1 20-11 25l-19 9c-8 4-14 0-18-9l-9-22 9-15-6-22 12-17Z" fill="#10171e" stroke="#76828d" stroke-width="3" stroke-linejoin="round"/>
+          <path d="m31 73-10 40q-2 8 5 12l13 6M169 73l10 40q2 8-5 12l-13 6" fill="none" stroke="#303d49" stroke-width="5" stroke-linecap="round"/>
+          <path d="m48 65 9 15M152 65l-9 15" fill="none" stroke="#ff962f" stroke-width="5" stroke-linecap="round"/>
+          <rect x="78" y="85" width="44" height="28" rx="4" fill="#050b0e" stroke="#53616c" stroke-width="2"/>
+          <path d="M84 92h10m-10 6h6m17-6h9m-9 6h5" fill="none" stroke="#7dc6ca" stroke-width="2" stroke-linecap="round"/>
+          <path d="M88 106h24" stroke="#ff962f" stroke-width="2"/>
+          <rect x="95" y="76" width="10" height="4" rx="1.5" fill="#ff962f"/>
+          <circle cx="69" cy="96" r="4" fill="#ff962f"/>
+          <circle cx="131" cy="96" r="4" fill="#c5d0d8"/>
+          <circle cx="72" cy="112" r="3" fill="#657787"/>
+          <circle cx="128" cy="112" r="3" fill="#657787"/>
+          <circle cx="100" cy="124" r="6" fill="#34424e" stroke="#7a8995" stroke-width="2"/>
+          <path d="M100 120v4" stroke="#ff962f" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
       <div id="miniAngle">0%</div>
@@ -1326,13 +1346,13 @@ function controlsEnabled() { return running && !document.hidden && !feedbackPaus
 let lastCurbImpactAt = 0;
 let lastFeedbackAt = 0;
 let lastFeedback = {intensity:0,sharpness:0,roughness:0};
-function stopRaceFeedback() {
-  feedbackRoad = {speed:0,kerb:0,seenAt:0};
+function stopRaceFeedback(preserveTelemetry=false) {
+  if (!preserveTelemetry) feedbackRoad = {speed:0,kerb:0,seenAt:0};
   lastFeedback = {intensity:0,sharpness:0,roughness:0};
   lastFeedbackAt = Date.now();
   if (typeof window.__nativeRaceFeedback==='function') window.__nativeRaceFeedback({...lastFeedback,stop:true});
 }
-function updateRaceFeedback(throttle, brake) {
+function updateRaceFeedback(throttle, brake, force=false) {
   if (typeof window.__nativeRaceFeedback!=='function') return;
   const now=Date.now();
   const allowed=running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN;
@@ -1343,14 +1363,21 @@ function updateRaceFeedback(throttle, brake) {
   // Native curb cues supply the road texture; avoid layering the old sharp rumble on top.
   const road=kerb>0 && typeof window.__nativeCurbImpact!=='function' ? Math.min(0.72, (0.34+0.09*kerb)*Math.min(1,feedbackRoad.speed/90)) : 0;
   const background=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250 ? 0.20 : 0;
-  const intensity=Math.min(0.9,background+Math.max(0.34*Math.sqrt(throttle),brake*0.4)+road);
+  const intensity=Math.min(0.9,background+Math.max(0.46*Math.sqrt(throttle),brake*0.4)+road);
   const sharpness=road>0?0.18:brake>0?0.65:throttle>0?0.22:0.12;
   const frame={intensity,sharpness,roughness:0};
   const changed=Math.abs(frame.intensity-lastFeedback.intensity)>0.015 || frame.roughness!==lastFeedback.roughness || (intensity>0 && frame.sharpness!==lastFeedback.sharpness);
-  if (!changed && now-lastFeedbackAt<80) return;
+  if (!force && !changed && now-lastFeedbackAt<80) return;
   lastFeedbackAt=now; lastFeedback=frame;
   window.__nativeRaceFeedback(frame);
 }
+function refreshRaceFeedback(force=false) {
+  const throttle=controls.fullThrottle ? 1 : throttlePedal.getValue();
+  const brake=controls.fullBrake ? 1 : brakePedal.getValue();
+  updateRaceFeedback(throttle,brake,force);
+}
+// Enabling the native engine must not wait for another sensor or display frame.
+window.__nativeFeedbackReady=()=>{if(controlsEnabled())refreshRaceFeedback(true);};
 
 let telemetrySeenAt = 0;
 const rpmLeds = [...document.querySelectorAll('.rpm-led')];
@@ -1374,10 +1401,13 @@ function clearTelemetry() {
   lastGear = null; lastDrsActive = false;
 }
 function onTelemetry(snapshot) {
-  if (snapshot.valid !== true) { clearTelemetry(); return; }
+  if (snapshot.valid !== true) { clearTelemetry(); refreshRaceFeedback(true); return; }
   telemetrySeenAt = Date.now();
   steeringAssistSpeed=finite(snapshot.spd,0,500); assistTelemetryAt=telemetrySeenAt;
   feedbackRoad = {speed:finite(snapshot.spd,0,500),kerb:Array.isArray(snapshot.surfaceTypes)?snapshot.surfaceTypes.slice(0,4).filter(value=>value===1).length:0,seenAt:telemetrySeenAt};
+  if(document.hidden || !running || ws?.readyState!==WebSocket.OPEN) feedbackRoad.seenAt=0;
+  // Start the background layer on this packet while retaining held pedal feedback.
+  refreshRaceFeedback();
   // Trigger an explicit impact before another asphalt sample can erase a short curb contact.
   if (feedbackRoad.kerb>0 && feedbackRoad.speed>5 && running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN && telemetrySeenAt-lastCurbImpactAt>=240) {
     lastCurbImpactAt=telemetrySeenAt;
@@ -1408,11 +1438,14 @@ function onTelemetry(snapshot) {
   drsIndicatorEl.classList.toggle('available',!drsActive && available);
   drsIndicatorEl.classList.toggle('approaching',!drsActive && !available && distance>0);
   drsStateEl.textContent = drsActive?'已开启':available?'可开启 · 按 Y':distance>0?distance+' m 后':snapshot.statusValid===true?'不可用':'待状态数据';
-  if (controlsEnabled() && navigator.vibrate) {
+  if (controlsEnabled()) {
     const now=Date.now();
-    if (inShiftZone && now-lastShiftBuzzAt>600) { navigator.vibrate(15); lastShiftBuzzAt=now; }
-    if (lastGear!==null && gear!==lastGear) navigator.vibrate(25);
-    if (!lastDrsActive && drsActive) navigator.vibrate([10,30,10]);
+    if (navigator.vibrate && inShiftZone && now-lastShiftBuzzAt>600) { navigator.vibrate(15); lastShiftBuzzAt=now; }
+    if (lastGear!==null && gear!==lastGear) {
+      if(typeof window.__nativeShiftFeedback==='function') window.__nativeShiftFeedback();
+      else if(navigator.vibrate) navigator.vibrate(75);
+    }
+    if (navigator.vibrate && !lastDrsActive && drsActive) navigator.vibrate([10,30,10]);
   }
   lastGear=gear; lastDrsActive=drsActive;
 }
@@ -1478,11 +1511,11 @@ const brakePedal = createPedal(document.getElementById('brakeZone'), brakePct);
 const throttlePedal = createPedal(document.getElementById('throttleZone'), throttlePct);
 
 let sendFrame = 0;
-function releaseAllInputs() {
+function releaseAllInputs(preserveTelemetry=false) {
   Object.keys(controls).forEach(key=>controls[key]=false);
   inputResetters.forEach(reset=>reset());
   steeringLockSide=0; lastSteeringCueAt=0;
-  stopRaceFeedback(); renderPedalReadouts(0,0);
+  stopRaceFeedback(preserveTelemetry); renderPedalReadouts(0,0);
   if(ws?.readyState===WebSocket.OPEN) ws.send('{}');
 }
 function resetQuickPedals() { releaseAllInputs(); }
@@ -1849,11 +1882,12 @@ document.getElementById('fullscreenBtn1').addEventListener('click', toggleFullsc
 
 function openSettings() {
   settingsOpen=true; feedbackPaused=true;
-  releaseAllInputs();
+  releaseAllInputs(true);
   document.getElementById('settingsOverlay').classList.add('open');
 }
 function closeSettings() {
-  releaseAllInputs(); settingsOpen=false; feedbackPaused=detailsOpen;
+  releaseAllInputs(true); settingsOpen=false; feedbackPaused=detailsOpen;
+  refreshRaceFeedback(true);
   document.getElementById('settingsOverlay').classList.remove('open');
 }
 document.getElementById('settingsBtn').addEventListener('click',openSettings);
@@ -1872,7 +1906,7 @@ document.querySelectorAll('.lang-preset').forEach(btn => {
 });
 
 function showConnectionDetails() {
-  detailsOpen=true; feedbackPaused=true; releaseAllInputs();
+  detailsOpen=true; feedbackPaused=true; releaseAllInputs(true);
   document.getElementById('connectionDetailsTitle').textContent='连接状态';
   document.getElementById('connectionDetailsText').textContent=document.getElementById('statusText2').textContent;
   document.getElementById('connectionDetails').showModal();
@@ -1883,7 +1917,7 @@ document.getElementById('driveStatus').addEventListener('keydown', event => {
   if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showConnectionDetails(); }
 });
 document.getElementById('connectionDetailsClose').addEventListener('click', () => document.getElementById('connectionDetails').close());
-document.getElementById('connectionDetails').addEventListener('close',()=>{detailsOpen=false;feedbackPaused=settingsOpen;releaseAllInputs();});
+document.getElementById('connectionDetails').addEventListener('close',()=>{detailsOpen=false;feedbackPaused=settingsOpen;releaseAllInputs(true);refreshRaceFeedback(true);});
 
 [['assistOffBtn','off'],['assistStableBtn','stable'],['assistAdaptiveBtn','adaptive']].forEach(([id,mode]) => document.getElementById(id).addEventListener('click',()=>setSteeringAssistMode(mode)));
 [['assistLightBtn','light'],['assistStandardBtn','standard'],['assistStrongBtn','strong']].forEach(([id,strength]) => document.getElementById(id).addEventListener('click',()=>setSteeringAssistStrength(strength)));
