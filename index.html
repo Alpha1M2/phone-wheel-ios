@@ -409,7 +409,6 @@
     <button id="startBtn" data-i18n="start">Start</button>
     <div id="secondaryRow">
       <button id="calBtn" data-i18n="calibrate">Calibrate</button>
-      <button id="invertBtn" data-i18n="invert">Invert</button>
       <button id="certBtn" data-i18n="verifyWs">Verify WS</button>
     </div>
   </footer>
@@ -494,8 +493,6 @@
 <div id="settingsOverlay">
   <div id="settingsPanel">
     <button id="calBtn2" data-i18n="calibrate">Calibrate</button>
-    <button id="invertBtn2" data-i18n="invert">Invert</button>
-    <button id="analogBtn">Analog Pedals: On</button>
     <button id="certBtn2" data-i18n="verifyWs">Verify WS</button>
 
     <div class="settingsSectionLabel" data-i18n="steeringAngleLabel">Steering Angle (each way)</div>
@@ -611,7 +608,6 @@ function applyTranslations() {
   });
   document.title = t('brand');
   document.documentElement.lang = lang;
-  document.getElementById('analogBtn').textContent = t(analogPedals ? 'analogPedalsOn' : 'analogPedalsOff');
   updateLangButtons();
   setStatus(currentStatusKey, currentStatusLive);
 }
@@ -671,8 +667,7 @@ let calibrationOffset = 0;
 let latestAx = 0;
 let latestAy = 0;
 let normalized = 0;
-let inverted = localStorage.getItem('steeringInverted') === '1';
-let analogPedals = localStorage.getItem('analogPedals') !== '0';
+const analogPedals = true;
 let running = false;
 
 const controls = {
@@ -965,7 +960,6 @@ function updateSteeringRange() {
 function sendLoop() {
   if (!running) return;
   let relative = autoCalibratePending ? 0 : currentRollDegrees() - calibrationOffset;
-  if (inverted) relative = -relative;
   const linear = Math.max(-1, Math.min(1, relative / maxAngleDeg));
   const curved = applySteerCurve(linear);
   steerSmoothed += (curved - steerSmoothed) * STEER_SMOOTHING_ALPHA;
@@ -1061,12 +1055,6 @@ function stop() {
   if (ws) ws.close();
 }
 
-function toggleInvert(target) {
-  inverted = !inverted;
-  localStorage.setItem('steeringInverted', inverted ? '1' : '0');
-  if (target) target.style.color = inverted ? 'var(--accent)' : '';
-}
-
 function openCertTab() {
   window.open(`https://${location.host}/`, '_blank');
 }
@@ -1074,13 +1062,6 @@ function openCertTab() {
 function applyAnalogPedalShape() {
   document.getElementById('brakeZone').classList.toggle('analog', analogPedals);
   document.getElementById('throttleZone').classList.toggle('analog', analogPedals);
-}
-
-function toggleAnalogPedals() {
-  analogPedals = !analogPedals;
-  localStorage.setItem('analogPedals', analogPedals ? '1' : '0');
-  document.getElementById('analogBtn').textContent = t(analogPedals ? 'analogPedalsOn' : 'analogPedalsOff');
-  applyAnalogPedalShape();
 }
 
 function updateAnglePresetButtons() {
@@ -1099,15 +1080,12 @@ function setMaxAngleDeg(deg) {
 startBtn.addEventListener('click', start);
 document.getElementById('calBtn').addEventListener('click', calibrate);
 document.getElementById('certBtn').addEventListener('click', openCertTab);
-document.getElementById('invertBtn').addEventListener('click', (e) => toggleInvert(e.target));
 document.getElementById('fullscreenBtn1').addEventListener('click', toggleFullscreen);
 
 document.getElementById('settingsBtn').addEventListener('click', () => document.getElementById('settingsOverlay').classList.add('open'));
 document.getElementById('closeSettingsBtn').addEventListener('click', () => document.getElementById('settingsOverlay').classList.remove('open'));
 document.getElementById('calBtn2').addEventListener('click', calibrate);
 document.getElementById('certBtn2').addEventListener('click', openCertTab);
-document.getElementById('invertBtn2').addEventListener('click', (e) => toggleInvert(e.target));
-document.getElementById('analogBtn').addEventListener('click', toggleAnalogPedals);
 document.getElementById('fullscreenBtn2').addEventListener('click', toggleFullscreen);
 document.getElementById('stopBtn').addEventListener('click', stop);
 

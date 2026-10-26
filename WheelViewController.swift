@@ -17,8 +17,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private var sendInFlight = false
     private var pendingInput: String?
     private var lastHaptic = Date.distantPast
-    private lazy var session = URLSession(configuration: .ephemeral, delegate: self,
-                                          delegateQueue: OperationQueue.main)
+    private var session: URLSession?
     private var hapticsEnabled: Bool {
         get { UserDefaults.standard.object(forKey: "haptics") as? Bool ?? true }
         set { UserDefaults.standard.set(newValue, forKey: "haptics") }
@@ -229,7 +228,14 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             emit(id, "error"); emit(id, "close"); showConnectionSettings(); return
         }
         socketID = id
-        let task = session.webSocketTask(with: url)
+        let config = URLSessionConfiguration.ephemeral
+        config.urlCache = nil
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        config.timeoutIntervalForRequest = 12
+        let connectionSession = URLSession(configuration: config, delegate: self,
+                                           delegateQueue: OperationQueue.main)
+        session = connectionSession
+        let task = connectionSession.webSocketTask(with: url)
         socket = task
         task.resume()
         receive(task, id: id)
@@ -240,6 +246,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         socketID = nil
         socket?.cancel(with: .goingAway, reason: nil)
         socket = nil
+        session?.invalidateAndCancel()
+        session = nil
         pendingInput = nil
         sendInFlight = false
         if let id = previous { emit(id, "close") }
@@ -292,7 +300,9 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             hint = "请重新连接并核对电脑证书。"
         default: hint = ""
         }
-        let text = "连接失败 (\(failure.code))：\(failure.localizedDescription) \(hint)"
+        let underlying = failure.userInfo[NSUnderlyingErrorKey] as? NSError
+        let detail = underlying.map { " [\($0.domain):\($0.code)]" } ?? ""
+        let text = "连接失败 (\(failure.code))：\(failure.localizedDescription)\(detail) \(hint)"
         if let data = try? JSONSerialization.data(withJSONObject: [text]),
            let json = String(data: data, encoding: .utf8) {
             web.evaluateJavaScript("window.__nativeLastError=\(json)[0]; document.querySelectorAll('#statusText,#statusText2').forEach(e=>e.textContent=window.__nativeLastError);", completionHandler: nil)
@@ -308,7 +318,18 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         if socket === webSocketTask { closeSocket() }
     }
 
+    func urlSession(_ session: URLSession, task: URLSessionTask,
+                    didReceive challenge: URLAuthenticationChallenge,
+                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        handleTrustChallenge(challenge, completionHandler: completionHandler)
+    }
+
     func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge,
+                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        handleTrustChallenge(challenge, completionHandler: completionHandler)
+    }
+
+    private func handleTrustChallenge(_ challenge: URLAuthenticationChallenge,
                     completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
         guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
               challenge.protectionSpace.host == endpoint?.host,
@@ -320,7 +341,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         let fingerprint = SHA256.hash(data: der).map { String(format: "%02x", $0) }.joined()
         let key = "certificate:" + challenge.protectionSpace.host
         if UserDefaults.standard.string(forKey: key) == fingerprint {
-            completionHandler(.useCredential, URLCredential(trust: trust)); return
+            acceptApprovedCertificate(trust, certificate: cert, completionHandler: completionHandler)
+            return
         }
         guard presentedViewController == nil else {
             completionHandler(.cancelAuthenticationChallenge, nil); return
@@ -330,12 +352,25 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "指纹一致，信任此电脑", style: .default) { _ in
             UserDefaults.standard.set(fingerprint, forKey: key)
-            completionHandler(.useCredential, URLCredential(trust: trust))
+            self.acceptApprovedCertificate(trust, certificate: cert, completionHandler: completionHandler)
         })
         alert.addAction(UIAlertAction(title: "取消", style: .cancel) { _ in
             completionHandler(.cancelAuthenticationChallenge, nil)
         })
         present(alert, animated: true)
+    }
+
+    private func acceptApprovedCertificate(_ trust: SecTrust, certificate: SecCertificate,
+                    completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+        // Only the exact certificate fingerprint approved above may be an anchor.
+        // Preserve URLSession's hostname, validity and TLS policy evaluation.
+        guard SecTrustSetAnchorCertificates(trust, [certificate] as CFArray) == errSecSuccess,
+              SecTrustSetAnchorCertificatesOnly(trust, true) == errSecSuccess,
+              SecTrustEvaluateWithError(trust, nil) else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+        completionHandler(.useCredential, URLCredential(trust: trust))
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
