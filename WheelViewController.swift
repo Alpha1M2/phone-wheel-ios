@@ -139,7 +139,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
 
     private func showError(_ text: String) {
         guard presentedViewController == nil else { return }
-        let alert = UIAlertController(title: "手机方向盘", message: text, preferredStyle: .alert)
+        let alert = UIAlertController(title: "F1 Race Controller", message: text, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "知道了", style: .default))
         present(alert, animated: true)
     }
@@ -383,7 +383,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
           if(document.getElementById(id))return;
           const b=document.createElement('button'); b.id=id; b.textContent=title;
           b.onclick=()=>window.webkit.messageHandlers.phoneWheel.postMessage({kind});
-          document.getElementById('settingsPanel').append(b);
+          document.getElementById('nativeSettingsGroup').append(b);
         });
         """
         web.evaluateJavaScript(code, completionHandler: nil)

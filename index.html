@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="Phone Wheel" />
+<meta name="apple-mobile-web-app-title" content="F1 Race Controller" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 <meta name="theme-color" content="#0a0b0d" />
 <meta name="color-scheme" content="dark" />
-<title>Phone Wheel</title>
+<title>F1 Race Controller</title>
 <style>
   :root {
     color-scheme: dark;
@@ -372,6 +372,61 @@
   #fullBrakeBtn { left: max(14px, var(--wheel-safe-left)); }
   #fullThrottleBtn { right: max(14px, var(--wheel-safe-right)); }
 
+
+  /* F1 instrument pack */
+  #telemetryStrip { display:grid; grid-template-columns:58px minmax(60px,1fr) 100px 92px; gap:10px; align-items:center; padding:8px 10px; background:#11151b; border:1px solid #303947; border-radius:12px; }
+  .instrument-label { font-size:8px; color:#8e9bac; letter-spacing:.12em; font-weight:700; }
+  .gear-card { text-align:center; border-right:1px solid #303947; padding-right:9px; }
+  #gearIndicator { width:auto; font-size:38px; line-height:1; color:#fff; }
+  .rpm-instrument { min-width:0; display:flex; flex-direction:column; gap:6px; }
+  #rpmBarWrap { height:13px; flex:none; border:0; border-radius:0; background:none; overflow:visible; }
+  #rpmBarFill { display:none; }
+  #rpmLeds { display:grid; grid-template-columns:repeat(15,1fr); gap:3px; height:100%; }
+  .rpm-led { background:#212a32; border-radius:3px; border:1px solid #36414c; }
+  .rpm-led.lit { background:var(--led); border-color:var(--led); box-shadow:0 0 7px var(--led); }
+  #rpmLeds.shift .lit { animation:shiftPulse .17s infinite alternate; }
+  .rpm-caption { display:flex; justify-content:space-between; gap:4px; font-size:9px; color:#9aa8b9; font-variant-numeric:tabular-nums; }
+  #shiftHint { color:#bac8da; }
+  #rpmLeds.shift + .rpm-caption #shiftHint { color:#70c9ff; }
+  #speedReadout { text-align:right; font-size:34px; line-height:1; font-weight:850; }
+  #speedReadout .unit { display:block; font-size:9px; margin:4px 0 0; letter-spacing:.14em; }
+  #drsIndicator { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-height:47px; padding:4px; border-radius:8px; background:#191f27; color:#8290a1; border:1px solid #35404f; }
+  #drsIndicator b { font-size:16px; letter-spacing:.1em; }
+  #drsState { font-size:9px; white-space:nowrap; }
+  #drsIndicator.available { color:#65e5ac; border-color:#32a66f; background:#123526; }
+  #drsIndicator.approaching { color:#f4c869; border-color:#84692c; background:#302a1b; }
+  #drsIndicator.active { background:#2cdd8a; color:#05271a; border-color:#6effbe; box-shadow:0 0 15px #26d98330; }
+  #telemetryHint { margin-top:-2px; align-self:flex-end; font-size:9px; color:#738399; }
+  #telemetryStrip.stale #gearIndicator, #telemetryStrip.stale #speedValue { color:#596575; }
+  #statusDot2 { background:#555!important; }
+  #statusDot2.live { background:var(--ok)!important; }
+  #driveTopBar { grid-template-columns:minmax(0,1fr) auto; }
+  #driveStatus { min-width:0; }
+  #statusText2 { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(47 * var(--wheel-vw)); }
+  /* Controller menu: clear grouping and separate return/end actions. */
+  #settingsPanel { display:flex; flex-direction:column; gap:12px; width:min(calc(78 * var(--wheel-vw)),540px); padding:16px; }
+  .menu-heading { display:flex; justify-content:space-between; align-items:center; font-size:17px; font-weight:800; }
+  .menu-heading small { font-size:10px; color:#92a1b4; font-weight:500; }
+  .menu-section { padding:10px; background:#10141a; border:1px solid #2d3745; border-radius:10px; }
+  .menu-section-title { color:#9faec1; font-size:10px; font-weight:700; margin-bottom:8px; }
+  .menu-section #anglePresets { display:flex; }
+  #nativeSettingsGroup { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  #nativeSettingsSection:has(#nativeSettingsGroup:empty) { display:none; }
+  #menuCalibration { display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:center; }
+  #calibrationNote { color:#9baabd; font-size:10px; line-height:1.5; }
+  .menu-footer { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  #stopBtn { background:#2b181d; border-color:#6f303c; color:#ffa3b3; }
+  #closeSettingsBtn { grid-column:auto; background:#e10600; }
+  @media (prefers-reduced-motion:reduce) { #rpmLeds.shift .lit { animation:none; } }
+
+
+  #settingsPanel { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px; }
+  .menu-heading, #nativeSettingsSection, .menu-footer, #certBtn2 { grid-column:1 / -1; }
+  #menuCalibration { display:flex; flex-direction:column; align-items:stretch; gap:6px; }
+  #calibrationNote { font-size:9px; line-height:1.35; text-align:center; }
+  .menu-section { padding:9px; }
+  #settingsPanel button { min-height:40px; }
+
 </style>
 </head>
 <body>
@@ -451,12 +506,16 @@
         <div class="steering-caption"><span id="steerRightValue">右 0%</span><span id="steerRightLimit">+90° 满幅</span></div>
       </div>
     </div>
-    <div id="telemetryStrip">
-      <div id="gearIndicator">N</div>
-      <div id="rpmBarWrap"><div id="rpmBarFill"></div></div>
-      <div id="speedReadout"><span id="speedValue">0</span><span class="unit">km/h</span></div>
-      <div id="drsIndicator">DRS</div>
+    <div id="telemetryStrip" class="stale">
+      <div class="gear-card"><div class="instrument-label">GEAR</div><div id="gearIndicator">—</div></div>
+      <div class="rpm-instrument">
+        <div id="rpmBarWrap"><div id="rpmBarFill"></div><div id="rpmLeds" aria-label="转速换挡灯"><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i></div></div>
+        <div class="rpm-caption"><span id="rpmValue">— RPM</span><span id="shiftHint">转速灯</span></div>
+      </div>
+      <div id="speedReadout"><span id="speedValue">—</span><span class="unit">KM/H</span></div>
+      <div id="drsIndicator"><b>DRS</b><span id="drsState">等待遥测</span></div>
     </div>
+    <div id="telemetryHint">等待游戏遥测 · 转向和踏板可正常使用</div>
 
     <div id="controlDeck">
       <div id="buttonCluster">
@@ -492,20 +551,18 @@
 <!-- ===================== SETTINGS OVERLAY (drive mode) ===================== -->
 <div id="settingsOverlay">
   <div id="settingsPanel">
-    <button id="calBtn2" data-i18n="calibrate">Calibrate</button>
-    <button id="certBtn2" data-i18n="verifyWs">Verify WS</button>
-
-    <div class="settingsSectionLabel" data-i18n="steeringAngleLabel">Steering Angle (each way)</div>
-    <div id="anglePresets">
-      <button class="angle-preset" data-angle="45">45&deg;</button>
-      <button class="angle-preset" data-angle="60">60&deg;</button>
-      <button class="angle-preset" data-angle="90">90&deg;</button>
-      <button class="angle-preset" data-angle="120">120&deg;</button>
-    </div>
-
-
-    <button id="stopBtn" data-i18n="stop">Stop</button>
-    <button id="closeSettingsBtn" data-i18n="close">Close</button>
+    <div class="menu-heading"><span>控制器设置</span><small>驾驶与连接</small></div>
+    <section class="menu-section" id="nativeSettingsSection"><div class="menu-section-title">连接与反馈</div><div id="nativeSettingsGroup"></div></section>
+    <section class="menu-section"><div class="menu-section-title">转向中心</div>
+      <div id="menuCalibration"><button id="calBtn2" data-i18n="calibrate">校准中心</button><span id="calibrationNote">握稳手机后校准；每次开始驾驶也会自动校准。</span></div>
+    </section>
+    <section class="menu-section"><div class="menu-section-title">满转向角度 · 单侧</div>
+      <div id="anglePresets">
+        <button class="angle-preset" data-angle="45">45&deg;</button><button class="angle-preset" data-angle="60">60&deg;</button><button class="angle-preset" data-angle="90">90&deg;</button><button class="angle-preset" data-angle="120">120&deg;</button>
+      </div>
+    </section>
+    <button id="certBtn2" data-i18n="verifyWs">检查连接页面</button>
+    <div class="menu-footer"><button id="stopBtn" data-i18n="stop">结束驾驶</button><button id="closeSettingsBtn" data-i18n="close">返回驾驶</button></div>
   </div>
 </div>
 
@@ -516,7 +573,7 @@
  * ------------------------------------------------------------------- */
 const STRINGS = {
   zh: {
-    brand:'手机方向盘', notConnected:'未连接', connected:'已连接',
+    brand:'F1 Race Controller', notConnected:'未连接', connected:'已连接',
     connecting:'正在连接电脑…', connectionFailed:'连接失败，正在重试', motionDenied:'运动权限未允许',
     steeringLabel:'转向', hint:'横屏握稳手机，点击开始，再校准当前姿势为中心。',
     start:'开始驾驶', calibrate:'校准中心', invert:'反转转向', verifyWs:'检查连接页面',
@@ -524,8 +581,8 @@ const STRINGS = {
     overtake:'超车', lookBack:'向后看', radio:'无线电', mfd:'多功能屏',
     brake:'刹车', throttle:'油门', steeringAngleLabel:'转向角度（单侧）',
     analogPedalsOn:'模拟踏板：开启', analogPedalsOff:'模拟踏板：关闭',
-    language:'语言', stop:'停止驾驶', close:'关闭设置', settings:'方向盘设置',
-    gameMenu:'菜单 / 暂停', 
+    language:'语言', stop:'结束驾驶', close:'返回驾驶', settings:'控制器设置',
+    gameMenu:'游戏暂停', 
     leftShoulder:'左肩键', rightShoulder:'右肩键', noteX:'辅助操作',
     noteY:'DRS / 维修区', noteB:'菜单返回', noteA:'菜单确认',
   },
@@ -698,31 +755,58 @@ let lastGear = null;
 let lastDrsActive = false;
 let lastShiftBuzzAt = 0;
 
-function onTelemetry(snapshot) {
-  speedValueEl.textContent = snapshot.spd;
-  gearIndicatorEl.textContent = snapshot.gear === 0 ? 'N' : snapshot.gear === -1 ? 'R' : snapshot.gear;
-  rpmBarFillEl.style.width = snapshot.rpmPct + '%';
-  const inShiftZone = snapshot.rpmPct >= SHIFT_THRESHOLD_PCT;
-  rpmBarFillEl.classList.toggle('shift', inShiftZone);
-  const drsActive = !!snapshot.drs;
-  drsIndicatorEl.classList.toggle('active', drsActive);
-
-  if (navigator.vibrate) {
-    const now = Date.now();
-    if (inShiftZone && now - lastShiftBuzzAt > 120) {
-      navigator.vibrate(15);
-      lastShiftBuzzAt = now;
-    }
-    if (lastGear !== null && snapshot.gear !== lastGear) {
-      navigator.vibrate(25);
-    }
-    if (!lastDrsActive && drsActive) {
-      navigator.vibrate([10, 30, 10]);
-    }
-  }
-  lastGear = snapshot.gear;
-  lastDrsActive = drsActive;
+let telemetrySeenAt = 0;
+const rpmLeds = [...document.querySelectorAll('.rpm-led')];
+const rpmLedsEl = document.getElementById('rpmLeds');
+const rpmValueEl = document.getElementById('rpmValue');
+const shiftHintEl = document.getElementById('shiftHint');
+const drsStateEl = document.getElementById('drsState');
+const telemetryStripEl = document.getElementById('telemetryStrip');
+const telemetryHintEl = document.getElementById('telemetryHint');
+const finite = (value, low, high) => Number.isFinite(Number(value)) ? Math.max(low, Math.min(high, Number(value))) : 0;
+function clearTelemetry() {
+  telemetryStripEl.classList.add('stale');
+  gearIndicatorEl.textContent = '—'; speedValueEl.textContent = '—'; rpmValueEl.textContent = '— RPM';
+  rpmLeds.forEach(led=>led.classList.remove('lit')); rpmLedsEl.classList.remove('shift');
+  shiftHintEl.textContent = '转速灯';
+  drsIndicatorEl.classList.remove('active','available','approaching'); drsStateEl.textContent = '等待遥测';
+  telemetryHintEl.textContent = '等待游戏遥测 · 转向和踏板可正常使用';
+  lastGear = null; lastDrsActive = false;
 }
+function onTelemetry(snapshot) {
+  if (snapshot.valid !== true) { clearTelemetry(); return; }
+  telemetrySeenAt = Date.now();
+  telemetryStripEl.classList.remove('stale');
+  telemetryHintEl.textContent = '实时游戏遥测';
+  const speed = Math.round(finite(snapshot.spd,0,500));
+  const gear = Math.round(finite(snapshot.gear,-1,8));
+  const rpmPct = finite(snapshot.rpmPct,0,100);
+  speedValueEl.textContent = String(speed);
+  gearIndicatorEl.textContent = gear===0?'N':gear===-1?'R':String(gear);
+  const rpm = Math.round(finite(snapshot.rpm,0,25000));
+  rpmValueEl.textContent = rpm ? rpm.toLocaleString('en-US')+' RPM' : '— RPM';
+  const bits = Math.round(finite(snapshot.rpmBits,0,32767));
+  const count = Math.round(rpmPct*15/100);
+  rpmLeds.forEach((led,i)=>led.classList.toggle('lit',bits ? !!(bits & (1<<i)) : i<count));
+  const inShiftZone = rpmPct >= SHIFT_THRESHOLD_PCT && gear>0;
+  rpmLedsEl.classList.toggle('shift',inShiftZone);
+  shiftHintEl.textContent = inShiftZone ? '升挡 ↑' : '转速灯';
+  const drsActive = snapshot.drs === true || snapshot.drs === 1;
+  const available = snapshot.statusValid === true && snapshot.drsAllowed === true;
+  const distance = snapshot.statusValid === true ? Math.round(finite(snapshot.drsDistance,0,65535)) : 0;
+  drsIndicatorEl.classList.toggle('active',drsActive);
+  drsIndicatorEl.classList.toggle('available',!drsActive && available);
+  drsIndicatorEl.classList.toggle('approaching',!drsActive && !available && distance>0);
+  drsStateEl.textContent = drsActive?'已开启':available?'可开启 · 按 Y':distance>0?distance+' m 后':snapshot.statusValid===true?'不可用':'待状态数据';
+  if (navigator.vibrate) {
+    const now=Date.now();
+    if (inShiftZone && now-lastShiftBuzzAt>600) { navigator.vibrate(15); lastShiftBuzzAt=now; }
+    if (lastGear!==null && gear!==lastGear) navigator.vibrate(25);
+    if (!lastDrsActive && drsActive) navigator.vibrate([10,30,10]);
+  }
+  lastGear=gear; lastDrsActive=drsActive;
+}
+setInterval(()=>{if(telemetrySeenAt && Date.now()-telemetrySeenAt>2200)clearTelemetry();},500);
 
 let currentStatusKey = 'notConnected';
 let currentStatusLive = false;
@@ -869,6 +953,7 @@ function connect() {
   connection.onclose = () => {
     if (ws !== connection) return;
     resetQuickPedals();
+    clearTelemetry();
     setStatus('connectionFailed', false);
     if (window.__nativeLastError) statusTexts.forEach(el => el.textContent = window.__nativeLastError);
     if (running) reconnectTimer = setTimeout(() => {
@@ -1059,6 +1144,7 @@ async function start() {
 }
 
 function stop() {
+  clearTelemetry();
   clearTimeout(reconnectTimer);
   running = false;
   autoCalibratePending = false;
@@ -1104,9 +1190,18 @@ document.getElementById('calBtn').addEventListener('click', calibrate);
 document.getElementById('certBtn').addEventListener('click', openCertTab);
 document.getElementById('fullscreenBtn1').addEventListener('click', toggleFullscreen);
 
-document.getElementById('settingsBtn').addEventListener('click', () => document.getElementById('settingsOverlay').classList.add('open'));
+function openSettings() {
+  resetQuickPedals(); brakePedal.reset(); throttlePedal.reset();
+  Object.keys(controls).forEach(key=>controls[key]=false);
+  renderPedalReadouts(0,0); sendControlSnapshot(0,0);
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); }
+document.getElementById('settingsBtn').addEventListener('click', openSettings);
+document.getElementById('settingsOverlay').addEventListener('click',event=>{if(event.target.id==='settingsOverlay')closeSettings();});
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSettings();});
 document.getElementById('closeSettingsBtn').addEventListener('click', () => document.getElementById('settingsOverlay').classList.remove('open'));
-document.getElementById('calBtn2').addEventListener('click', calibrate);
+document.getElementById('calBtn2').addEventListener('click', () => { calibrate(); document.getElementById('calibrationNote').textContent='已校准 · 当前握持姿势为转向中心'; });
 document.getElementById('certBtn2').addEventListener('click', openCertTab);
 document.getElementById('fullscreenBtn2').addEventListener('click', toggleFullscreen);
 document.getElementById('stopBtn').addEventListener('click', stop);
