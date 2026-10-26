@@ -10,6 +10,8 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
                                  WKNavigationDelegate {
     private var web: WKWebView!
     private let motion = CMMotionManager()
+    private var motionDeliveryInFlight = false
+    private var motionGeneration = 0
     private var engine: CHHapticEngine?
     private var socket: PinnedWebSocket?
     private var socketID: String?
@@ -70,7 +72,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
 
     @objc private func background() {
         web.evaluateJavaScript("if(typeof stop==='function')stop();", completionHandler: nil)
-        motion.stopAccelerometerUpdates()
+        stopMotion()
         closeSocket()
         engine?.stop(completionHandler: nil)
         UIApplication.shared.isIdleTimerDisabled = false
@@ -156,6 +158,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         case "networkSettings": showConnectionSettings()
         case "hapticSettings": showHapticSettings()
         case "motion": startMotion()
+        case "stopMotion": stopMotion()
         case "tap": playHaptic([12])
         case "haptic":
             let pattern = (body["pattern"] as? [Double]) ?? [(body["pattern"] as? Double) ?? 20]
@@ -174,14 +177,34 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     }
 
     private func startMotion() {
-        guard motion.isAccelerometerAvailable else { showError("此设备不支持加速度传感器。"); return }
-        guard !motion.isAccelerometerActive else { return }
-        motion.accelerometerUpdateInterval = 1.0 / 60.0
+        guard motion.isDeviceMotionAvailable else { showError("此设备不支持融合姿态传感器。"); return }
+        guard !motion.isDeviceMotionActive else { return }
+        motionGeneration += 1
+        let generation = motionGeneration
+        motionDeliveryInFlight = false
+        motion.deviceMotionUpdateInterval = 1.0 / 60.0
         UIApplication.shared.isIdleTimerDisabled = true
-        motion.startAccelerometerUpdates(to: .main) { [weak self] sample, _ in
-            guard let self = self, let g = sample?.acceleration else { return }
-            self.web.evaluateJavaScript("window.__nativeMotion(\(g.x * 9.81),\(g.y * 9.81),\(g.z * 9.81));", completionHandler: nil)
+        // Fused gravity excludes linear acceleration; arbitrary heading avoids magnetic jumps.
+        motion.startDeviceMotionUpdates(using: .xArbitraryZVertical, to: .main) { [weak self] sample, _ in
+            guard let self = self, let sample = sample,
+                  self.motionGeneration == generation, !self.motionDeliveryInFlight,
+                  ProcessInfo.processInfo.systemUptime - sample.timestamp < 0.15 else { return }
+            let g = sample.gravity
+            let rate = sample.rotationRate.z * 180.0 / Double.pi
+            guard [g.x, g.y, g.z, rate, sample.timestamp].allSatisfy({ $0.isFinite }) else { return }
+            self.motionDeliveryInFlight = true
+            self.web.evaluateJavaScript("window.__nativeMotion(\(g.x * 9.81),\(g.y * 9.81),\(g.z * 9.81),\(rate),\(sample.timestamp));") { [weak self] _, _ in
+                guard let self = self, self.motionGeneration == generation else { return }
+                self.motionDeliveryInFlight = false
+            }
         }
+    }
+
+    private func stopMotion() {
+        motionGeneration += 1
+        motion.stopDeviceMotionUpdates()
+        motionDeliveryInFlight = false
+        UIApplication.shared.isIdleTimerDisabled = false
     }
 
     private func playHaptic(_ input: [Double], force: Bool = false) {

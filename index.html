@@ -593,7 +593,7 @@ const STRINGS = {
   zh: {
     brand:'F1 Race Controller', notConnected:'未连接', connected:'已连接',
     connecting:'正在连接电脑…', connectionFailed:'连接失败，正在重试', motionDenied:'运动权限未允许',
-    steeringLabel:'转向', hint:'横屏握稳手机，点击开始，再校准当前姿势为中心。',
+    steeringLabel:'转向', hint:'横屏握稳，开始时会短暂校准；请避免将手机完全平放。',
     start:'开始驾驶', calibrate:'校准中心', invert:'反转转向', verifyWs:'检查连接页面',
     driving:'驾驶中', gearDown:'降挡 ↓', gearUp:'升挡 ↑', drsPit:'DRS / 限速',
     overtake:'超车', lookBack:'向后看', radio:'无线电', mfd:'多功能屏',
@@ -715,13 +715,13 @@ const wsUrl = `wss://${location.host}/ws`;
 // sharper toward lock, closer to how a real car's steering feels than a
 // straight linear mapping. STEER_DEADZONE zeroes out sub-threshold sensor
 // noise near center.
-const STEER_DEADZONE = 0.02;
+const STEER_DEADZONE = 0.012;
 const STEER_CURVE_EXPONENT = 1.15;
 
 // Light low-pass filter (EMA) on the final steering value. Raw accelerometer
 // samples are noisy enough on their own to make fine control impractical;
 // this removes most of that jitter with only a couple of frames of latency.
-const STEER_SMOOTHING_ALPHA = 0.5;
+// Adaptive filtering is applied once per sensor sample, using elapsed time.
 let steerSmoothed = 0;
 
 function applySteerCurve(x) {
@@ -993,43 +993,63 @@ window.__nativeReconnect = () => {
   else start();
 };
 
-/* ---------------------------------------------------------------------
- * Steering angle: raw accelerometer gravity-vector angle via atan2, with
- * unwrap so the reading doesn't jump when it crosses the +/-180 degree
- * seam (e.g. 179 -> -179 reads as a 358-degree turn instead of a 2-degree
- * one). No fusion with the gyroscope -- kept intentionally simple.
- * ------------------------------------------------------------------- */
+/* Fused gravity steering, unwrapped angles, short calibration and adaptive filtering. */
 let rollEstimate = 0;
 let hasRollReading = false;
 let autoCalibratePending = false;
+let calibrationSamples = [];
+let lastMotionStamp = 0;
+let lastMotionAt = 0;
+let steeringRate = 0;
+let filteredRoll = 0;
+let filterReady = false;
+let gravitySuspended = false;
 
 function onMotion(event) {
   const g = event.accelerationIncludingGravity;
-  if (!g || g.x === null || g.y === null) return;
-  latestAx = g.x;
-  latestAy = g.y;
-  const raw = Math.atan2(latestAx, -latestAy) * 180 / Math.PI;
-
-  if (!hasRollReading) {
-    rollEstimate = raw;
-    hasRollReading = true;
-  } else {
-    rollEstimate = raw + Math.round((rollEstimate - raw) / 360) * 360;
+  if (!g || !Number.isFinite(g.x) || !Number.isFinite(g.y)) return;
+  const z = Number.isFinite(g.z) ? g.z : 0;
+  const magnitude = Math.hypot(g.x,g.y,z);
+  if (magnitude < 0.01 || Math.hypot(g.x,g.y)/magnitude < 0.15) {
+    // Almost flat: the gravity angle is undefined. Do not amplify sensor noise.
+    gravitySuspended = true; lastMotionAt = 0; return;
   }
+  latestAx = g.x; latestAy = g.y;
+  const raw = Math.atan2(g.x,-g.y)*180/Math.PI;
+  const nextRoll = hasRollReading ? raw+Math.round((rollEstimate-raw)/360)*360 : raw;
+  if (gravitySuspended && hasRollReading && !autoCalibratePending) {
+    calibrationOffset += nextRoll-rollEstimate;
+    filterReady = false;
+  }
+  gravitySuspended = false;
+  const stamp = Number.isFinite(event.__nativeSampleTimestamp) ? event.__nativeSampleTimestamp*1000 :
+    Number.isFinite(event.timeStamp) ? event.timeStamp : Date.now();
+  const gap = lastMotionStamp ? (stamp-lastMotionStamp)/1000 : 1/60;
+  const dt = Math.max(1/240,Math.min(0.1,gap>0?gap:1/60));
+  if (gap>0.25) { filterReady=false; steeringRate=0; }
+  const derivative = hasRollReading ? (nextRoll-rollEstimate)/dt : 0;
+  steeringRate += (1-Math.exp(-2*Math.PI*2*dt))*(derivative-steeringRate);
+  rollEstimate=nextRoll; hasRollReading=true; lastMotionStamp=stamp; lastMotionAt=Date.now();
   if (autoCalibratePending) {
-    calibrate();
-    autoCalibratePending = false;
-    steerSmoothed = 0;
-    normalized = 0;
+    calibrationSamples.push(rollEstimate);
+    if (calibrationSamples.length<6) return;
+    calibrationOffset=calibrationSamples.reduce((a,b)=>a+b,0)/calibrationSamples.length;
+    calibrationSamples=[]; autoCalibratePending=false; filterReady=false; steeringRate=0;
+    document.getElementById('calibrationNote').textContent='已校准 · 当前握持姿势为转向中心';
+  }
+  const relative=rollEstimate-calibrationOffset;
+  if (!filterReady) { filteredRoll=relative; filterReady=true; }
+  else {
+    const gyroRate=Number.isFinite(event.rotationRate?.alpha)?Math.abs(event.rotationRate.alpha):0;
+    const cutoff=Math.min(30,3+0.12*Math.max(Math.abs(steeringRate),gyroRate));
+    filteredRoll+=(1-Math.exp(-2*Math.PI*cutoff*dt))*(relative-filteredRoll);
   }
 }
-
-function currentRollDegrees() {
-  return rollEstimate;
-}
-
+function currentRollDegrees() { return rollEstimate; }
 function calibrate() {
-  calibrationOffset = currentRollDegrees();
+  autoCalibratePending=true; calibrationSamples=[]; filterReady=false;
+  steerSmoothed=0; normalized=0;
+  document.getElementById('calibrationNote').textContent='正在校准…请握稳手机';
 }
 
 function bindHold(el, onChange) {
@@ -1083,10 +1103,10 @@ function updateSteeringRange() {
 
 function sendLoop() {
   if (!running) return;
-  let relative = autoCalibratePending ? 0 : currentRollDegrees() - calibrationOffset;
+  let relative = autoCalibratePending || !lastMotionAt || Date.now()-lastMotionAt>250 ? 0 : filteredRoll;
   const linear = Math.max(-1, Math.min(1, relative / maxAngleDeg));
   const curved = applySteerCurve(linear);
-  steerSmoothed += (curved - steerSmoothed) * STEER_SMOOTHING_ALPHA;
+  steerSmoothed = curved;
   normalized = steerSmoothed;
   updateSteeringMeter(normalized);
 
@@ -1148,9 +1168,10 @@ async function start() {
     }
   }
   preferLandscape();
-  // Center against the first fresh sensor sample after every start.
+  // Center against a short window of fresh samples after every start.
   hasRollReading = false;
   autoCalibratePending = true;
+  calibrationSamples=[]; lastMotionStamp=0; lastMotionAt=0; steeringRate=0; filterReady=false; gravitySuspended=false;
   steerSmoothed = 0;
   normalized = 0;
   window.addEventListener('devicemotion', onMotion);
@@ -1162,6 +1183,8 @@ async function start() {
 }
 
 function stop() {
+  if (typeof window.__nativeStopMotion==='function') window.__nativeStopMotion();
+  lastMotionAt=0; calibrationSamples=[]; filterReady=false;
   clearTelemetry();
   clearTimeout(reconnectTimer);
   running = false;
@@ -1219,7 +1242,7 @@ document.getElementById('settingsBtn').addEventListener('click', openSettings);
 document.getElementById('settingsOverlay').addEventListener('click',event=>{if(event.target.id==='settingsOverlay')closeSettings();});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSettings();});
 document.getElementById('closeSettingsBtn').addEventListener('click', () => document.getElementById('settingsOverlay').classList.remove('open'));
-document.getElementById('calBtn2').addEventListener('click', () => { calibrate(); document.getElementById('calibrationNote').textContent='已校准 · 当前握持姿势为转向中心'; });
+document.getElementById('calBtn2').addEventListener('click', calibrate);
 document.getElementById('certBtn2').addEventListener('click', openCertTab);
 document.getElementById('fullscreenBtn2').addEventListener('click', toggleFullscreen);
 document.getElementById('stopBtn').addEventListener('click', stop);

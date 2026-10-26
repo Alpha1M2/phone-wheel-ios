@@ -33,16 +33,19 @@
   Object.defineProperty(navigator, 'vibrate', {configurable:true, value:(pattern) => {
     post({kind:'haptic', pattern}); return true;
   }});
-  // Core Motion supplies the same raw gravity vector used by the webpage.
+  // Core Motion supplies fused gravity, gyro turn rate and monotonic sample time.
   const requestMotion = async () => { post({kind:'motion'}); return 'granted'; };
   window.__nativeRequestMotion = requestMotion;
+  window.__nativeStopMotion = () => post({kind:'stopMotion'});
   try {
     if (window.DeviceMotionEvent) DeviceMotionEvent.requestPermission = requestMotion;
     else window.DeviceMotionEvent = {requestPermission:requestMotion};
   } catch (_) { post({kind:'motion'}); }
-  window.__nativeMotion = (x,y,z) => {
+  window.__nativeMotion = (x,y,z,alpha,timestamp) => {
     const event = new Event('devicemotion');
     Object.defineProperty(event, 'accelerationIncludingGravity', {value:{x,y,z}});
+    Object.defineProperty(event, 'rotationRate', {value:{alpha,beta:0,gamma:0}});
+    Object.defineProperty(event, '__nativeSampleTimestamp', {value:timestamp});
     window.dispatchEvent(event);
   };
   document.addEventListener('pointerdown', event => {
