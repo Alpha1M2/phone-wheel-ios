@@ -244,7 +244,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
             DispatchQueue.main.async {
                 guard let self = self, self.socket === task else { return }
                 self.sendInFlight = false
-                if error != nil { self.closeSocket() } else { self.flushInput() }
+                if let error = error { self.reportConnectionError(error); self.closeSocket() } else { self.flushInput() }
             }
         }
     }
@@ -262,9 +262,31 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
                     @unknown default: break
                     }
                     self.receive(task, id: id)
-                case .failure: self.emit(id, "error"); self.closeSocket()
+                case .failure(let error):
+                    self.reportConnectionError(error)
+                    self.emit(id, "error")
+                    self.closeSocket()
                 }
             }
+        }
+    }
+
+    private func reportConnectionError(_ error: Error) {
+        let failure = error as NSError
+        let hint: String
+        switch failure.code {
+        case NSURLErrorNotConnectedToInternet:
+            hint = "请检查本地网络权限、VPN和手机热点连接。"
+        case NSURLErrorCannotConnectToHost, NSURLErrorTimedOut:
+            hint = "请确认电脑地址、8080端口及电脑服务。"
+        case NSURLErrorSecureConnectionFailed, NSURLErrorServerCertificateUntrusted:
+            hint = "请重新连接并核对电脑证书。"
+        default: hint = ""
+        }
+        let text = "连接失败 (\(failure.code))：\(failure.localizedDescription) \(hint)"
+        if let data = try? JSONSerialization.data(withJSONObject: [text]),
+           let json = String(data: data, encoding: .utf8) {
+            web.evaluateJavaScript("window.__nativeLastError=\(json)[0]; document.querySelectorAll('#statusText,#statusText2').forEach(e=>e.textContent=window.__nativeLastError);", completionHandler: nil)
         }
     }
 

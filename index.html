@@ -859,10 +859,11 @@ function toggleFullscreen() {
 
 function connect() {
   ws = new WebSocket(wsUrl);
-  ws.onopen = () => setStatus('connected', true);
+  ws.onopen = () => { window.__nativeLastError = ''; setStatus('connected', true); };
   ws.onclose = () => {
     resetQuickPedals();
     setStatus('connectionFailed', false);
+    if(window.__nativeLastError) statusTexts.forEach(el=>el.textContent=window.__nativeLastError);
     if (running) setTimeout(() => { if (running && !document.hidden) connect(); }, 2000);
   };
   ws.onerror = () => ws.close();
@@ -1114,5 +1115,6 @@ updateSteeringMeter(0);
 </script>
 </body>
 </html>
+
 
 
