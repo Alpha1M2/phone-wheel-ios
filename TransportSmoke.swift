@@ -23,7 +23,7 @@ private final class Smoke {
             }
         }, onMessage: { [weak self] text in
             guard let self = self, text == "echo:" + token else {
-                print("FAIL: wrong echo"); exit(1)
+                print("FAIL: wrong echo: \(text)"); exit(1)
             }
             self.successes += 1
             self.client?.close()

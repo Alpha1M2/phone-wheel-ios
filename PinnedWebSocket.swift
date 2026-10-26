@@ -85,11 +85,15 @@ final class PinnedWebSocket {
             guard let self = self, !self.closed else { return }
             if let error = error { self.fail(error); return }
             if let metadata = context?.protocolMetadata(definition: NWProtocolWebSocket.definition)
-                as? NWProtocolWebSocket.Metadata, metadata.opcode == .close {
-                self.close(); return
-            }
-            if let data = data, let text = String(data: data, encoding: .utf8) {
-                self.onMessage(text)
+                as? NWProtocolWebSocket.Metadata {
+                switch metadata.opcode {
+                case .close: self.close(); return
+                case .text, .binary:
+                    if let data = data, let text = String(data: data, encoding: .utf8) {
+                        self.onMessage(text)
+                    }
+                default: break // Ping/Pong control frames are not telemetry.
+                }
             }
             self.receive()
         }
