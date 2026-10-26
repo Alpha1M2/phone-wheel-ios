@@ -453,6 +453,7 @@
   #lookBackBtn { grid-column:1; }
 
 
+  #vpnNotice { grid-column:1 / -1; padding:7px 10px; border:1px solid #6c5731; border-radius:8px; background:#282215; color:#f0d39b; font-size:12px; text-align:center; line-height:1.4; }
   /* Reserve the space between the shoulder buttons and utility buttons for status. */
   #driveTopBar { justify-content:flex-end; }
   #driveStatus {
@@ -503,6 +504,7 @@
   </main>
 
   <footer>
+    <div id="vpnNotice" role="note">连接前请关闭 iPhone 的 VPN / 代理，并保持热点连接。</div>
     <button id="startBtn" data-i18n="start">Start</button>
     <div id="secondaryRow">
       <button id="calBtn" data-i18n="calibrate">Calibrate</button>

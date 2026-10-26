@@ -101,7 +101,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private func showConnectionSettings() {
         guard presentedViewController == nil else { return }
         let alert = UIAlertController(title: "连接电脑", message:
-            "填写电脑方向盘地址，例如 192.168.1.10:8080。手机与电脑需在同一可信网络。",
+            "填写电脑方向盘地址，例如 192.168.1.10:8080。手机与电脑需在同一可信网络。连接前请关闭 iPhone 的 VPN / 代理。",
             preferredStyle: .alert)
         alert.addTextField {
             $0.placeholder = "电脑 IPv4:8080"
@@ -313,12 +313,14 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         } else { failure = error as NSError }
         let hint: String
         switch failure.code {
+        case 54:
+            hint = "连接被重置，请先关闭 iPhone 的 VPN / 代理，再点网络连接重新连接。"
         case NSURLErrorNotConnectedToInternet:
             hint = "请检查本地网络权限、VPN和手机热点连接。"
         case NSURLErrorCannotConnectToHost, NSURLErrorTimedOut:
-            hint = "请确认电脑地址、8080端口及电脑服务。"
+            hint = "请先关闭 iPhone 的 VPN / 代理，再确认电脑地址、8080端口及电脑服务。"
         case NSURLErrorSecureConnectionFailed, NSURLErrorServerCertificateUntrusted:
-            hint = "请重新连接并核对电脑证书。"
+            hint = "请先关闭 iPhone 的 VPN / 代理，再重新连接并核对电脑证书。"
         default: hint = ""
         }
         let underlying = failure.userInfo[NSUnderlyingErrorKey] as? NSError
