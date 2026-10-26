@@ -11,6 +11,7 @@ targets:
     sources:
       - path: AppDelegate.swift
       - path: WheelViewController.swift
+      - path: ControlInputBuffer.swift
       - path: PinnedWebSocket.swift
       - path: NativeBridge.js
       - path: index.html
@@ -46,8 +47,8 @@ targets:
         INFOPLIST_KEY_UIRequiresFullScreen: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-        MARKETING_VERSION: '0.3.11'
-        CURRENT_PROJECT_VERSION: '20'
+        MARKETING_VERSION: '0.3.12'
+        CURRENT_PROJECT_VERSION: '21'
     dependencies:
       - sdk: UIKit.framework
       - sdk: WebKit.framework

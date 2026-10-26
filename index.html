@@ -544,6 +544,159 @@
     #calibrationNote, #steeringAssistNote { font-size:9px; }
     #steeringAssistNote { margin-top:5px; line-height:1.3; }
   }
+/* Papaya cockpit: paint-only overrides; established positions and hit areas stay intact. */
+:root {
+  --bg:#090b0d;
+  --panel:#191d21;
+  --line:#343a40;
+  --accent:#ff8700;
+  --accent-glow:rgba(255,135,0,.18);
+  --text:#f7f8fa;
+  --text-dim:#9da5ae;
+  --throttle:#11bd76;
+  --brake:#e63b48;
+  --ok:#2cdd91;
+}
+html, body, #landscapeRoot { background:var(--bg); }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+button, [role="button"] { -webkit-tap-highlight-color:transparent; }
+button:active { transform:none; }
+button:focus-visible, [role="button"]:focus-visible {
+  outline:2px solid var(--accent); outline-offset:3px;
+}
+
+/* The two small orange seams tie the cockpit together without a bright overlay. */
+#driveScreen::before, #driveScreen::after {
+  content:""; position:absolute; pointer-events:none; z-index:0;
+  left:calc(var(--wheel-safe-left) + var(--pedal-width) + 14px);
+  right:calc(var(--wheel-safe-right) + var(--pedal-width) + 14px);
+  height:2px; background:#ff87002c;
+}
+#driveScreen::before { top:0; }
+#driveScreen::after { bottom:0; }
+.wheel { filter:none; }
+.wheel .rim { stroke:#59626c; }
+.wheel .spoke { fill:#3d454e; }
+.wheel .hub, .wheel .mark { fill:var(--accent); }
+#miniAngle { color:#f0f3f6; letter-spacing:.02em; }
+#steeringRange, .steering-caption { color:#a8b0b9; }
+.steering-track { background:#171b20; border-color:#47505a; border-radius:5px; }
+.steering-fill { background:var(--accent); }
+.steering-track::after { opacity:.6; }
+
+/* A quiet instrument binnacle, with speed and gear visually ahead of captions. */
+#telemetryStrip {
+  background:#14191e; border-color:#3b4148; border-radius:13px;
+  box-shadow:inset 0 2px 0 #ff8700,0 6px 18px #0003;
+}
+.gear-card { border-right-color:#3b424a; }
+.instrument-label, #speedReadout .unit { color:#a7b0ba; font-weight:700; }
+#gearIndicator { color:#ff9c31; font-weight:900; }
+#speedValue { color:#fff; font-weight:850; }
+#gearIndicator, #speedValue, .pedal-btn .pct { font-variant-numeric:tabular-nums lining-nums; }
+.rpm-led { background:#272e35; border-color:#3e4750; border-radius:3px; }
+.rpm-led.lit { box-shadow:0 0 5px var(--led); }
+.rpm-caption { color:#a2acb7; }
+#shiftHint { color:#bcc4cc; }
+#drsIndicator { background:#1c232a; border-color:#3e4954; color:#a5b2bf; border-radius:9px; }
+#drsIndicator.available { background:#12382a; color:#8cf0bd; border-color:#409b70; }
+#drsIndicator.approaching { background:#362817; color:#ffbd70; border-color:#92612c; }
+#drsIndicator.active { background:#3ae19b; color:#08291d; border-color:#80f5c4; box-shadow:0 0 12px #2cdd8a22; }
+#telemetryStrip.stale #gearIndicator, #telemetryStrip.stale #speedValue { color:#78828d; }
+#telemetryHint { color:#8b96a2; }
+
+/* Matte controls keep colored Xbox glyphs; press feedback changes paint, not geometry. */
+.face-button, .action-btn, #settingsBtn, .utility-button {
+  background:#1a1f25; border-color:#3b444f; color:#f7f8fa;
+  box-shadow:0 3px 0 #050608,inset 0 1px 0 #ffffff06;
+  transition:background-color .06s,border-color .06s,box-shadow .06s;
+}
+.face-button { border-radius:14px; }
+.face-button span { font-weight:850; letter-spacing:.015em; }
+.face-button .face-note { color:#aeb8c3; }
+.face-button[data-pad]::before { box-shadow:inset 0 1px 0 #ffffff30,0 2px 5px #0004; }
+.face-button.pressed {
+  background:#30363e; border-color:var(--pad-color); transform:none;
+  box-shadow:inset 0 0 0 1px var(--pad-color),0 0 12px #ffffff08;
+}
+.face-button.pressed .face-note { color:#e5e9ef; }
+#gearUpBtn { background:#152820; border-color:#3a7054; box-shadow:inset 3px 0 0 #2eb46a,0 3px 0 #050608; }
+#gearDownBtn { background:#192639; border-color:#3c5d87; box-shadow:inset 3px 0 0 #4b8ce4,0 3px 0 #050608; }
+#gearUpBtn.pressed { background:#22563c; border-color:#68d28f; }
+#gearDownBtn.pressed { background:#244978; border-color:#83b7ff; }
+#topAuxButtons .shoulder-button { border-radius:11px; }
+.shoulder-button[data-pad]::before { background:#343c45; color:#ffd09b; }
+.shoulder-button small { color:#aab4c0; }
+.action-btn.pressed, .utility-button.pressed {
+  background:#513314; border-color:var(--accent); color:#fff;
+  box-shadow:inset 0 0 0 1px #ff87004d;
+}
+#dpadRow .action-btn { background:#242c35; border-color:#3c4855; color:#edf2f7; border-radius:10px; }
+#dpadRow .action-btn.pressed { background:var(--accent); color:#17120c; border-color:#ffb45f; }
+#dpadRow::after { background:#11171d; border-color:#303b46; box-shadow:inset 0 1px 4px #0005; }
+#settingsBtn { border-color:#886137; color:#ffd09b; }
+#settingsBtn:active { background:#4a321b; border-color:var(--accent); }
+#gameMenuBtn { background:#171d23; color:#c4cdd6; }
+#gameMenuBtn.pressed { background:#513314; color:#fff; border-color:var(--accent); }
+
+/* Pedal colors remain unambiguous, while the changing fill becomes easier to read. */
+#brakeZone.analog { background:#421d24; box-shadow:inset 0 0 0 2px #ae4c58,0 5px 15px #0004; }
+#throttleZone.analog { background:#123c2c; box-shadow:inset 0 0 0 2px #359c70,0 5px 15px #0004; }
+#brakeZone.analog .pedalFill { background:#d93343; }
+#throttleZone.analog .pedalFill { background:#0b8050; }
+.pedal-btn.analog { filter:none; }
+.pedal-btn.analog.pressed { filter:none; }
+.pedal-btn.analog .pedalFill { transition:none; }
+.pedal-btn .pedalLabel { text-shadow:0 1px 3px #0004; }
+.pedal-btn .pct { font-size:clamp(24px,calc(8 * var(--wheel-vh)),32px); letter-spacing:-.025em; text-shadow:0 1px 3px #0004; }
+#brakeZone.analog.pressed { box-shadow:inset 0 0 0 2px #ff8a94,0 0 16px #e63b4818; }
+#throttleZone.analog.pressed { box-shadow:inset 0 0 0 2px #6debb6,0 0 16px #11bd7618; }
+.quickPedals button { font-weight:850; letter-spacing:.025em; box-shadow:inset 0 1px 0 #ffffff08,0 3px 0 #050608; }
+.quickPedals button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; }
+.quickPedals .quick-title { font-size:16px; font-weight:850; line-height:1.15; }
+.quickPedals small { font-size:9px; font-weight:500; letter-spacing:.02em; line-height:1.25; opacity:.8; }
+#fullBrakeBtn { background:#431c24; border-color:#a54755; color:#fff0f1; }
+#fullThrottleBtn { background:#153e2c; border-color:#3f9b70; color:#eafff5; }
+#fullBrakeBtn.pressed { background:#da3243; border-color:#ff99a4; box-shadow:inset 0 0 0 1px #ff99a4; }
+#fullThrottleBtn.pressed { background:#0b8050; border-color:#8df4c9; box-shadow:inset 0 0 0 1px #8df4c9; }
+#driveStatus { color:#a7b1bc; border-radius:5px; background:#12181e; }
+#statusText2 { color:inherit; }
+#driveStatus[data-state="connecting"] { color:#ffbf78; }
+#driveStatus[data-state="disconnected"] { color:#ff98a1; }
+#statusDot2:not(.live) { background:#727b85 !important; box-shadow:none; }
+#statusDot2.live { background:var(--ok) !important; }
+
+/* Settings keep the existing fixed grid and footer: no new rows, padding or scrolling. */
+#settingsOverlay { background:#050709ed; }
+#settingsPanel { background:#181d23; border-color:#5b4a36; border-radius:16px; box-shadow:inset 0 2px 0 var(--accent),0 18px 55px #0008; }
+#settingsPanel .menu-heading > span { color:#fff; }
+#settingsPanel .menu-heading small { color:#d3a778; }
+#settingsPanel .menu-section { background:#10161c; border-color:#343f4b; border-radius:11px; }
+#settingsPanel .menu-section-title { color:#ffb25c; letter-spacing:.025em; }
+#settingsPanel button { background:#242d37; border-color:#414d5b; border-radius:8px; color:#edf2f7; }
+#settingsPanel button:active { background:#354252; border-color:#8394a8; }
+#settingsPanel .angle-preset.active-preset, #settingsPanel .assist-mode.selected {
+  background:#ff8700; border-color:#ffb45f; color:#211508; box-shadow:none;
+}
+#settingsPanel #closeSettingsBtn { background:var(--accent); border-color:#ffab4c; color:#201407; font-weight:850; }
+#settingsPanel #stopBtn { background:#351e26; border-color:#7e3b4d; color:#ffb8c7; }
+#calibrationNote, #steeringAssistNote { color:#aab6c3; }
+#connectionDetails { background:#141b23; border-color:#775b3d; box-shadow:inset 0 2px 0 var(--accent); }
+#connectionDetails h2 { color:#ffb25c; }
+#connectionDetailsClose { background:#293746; }
+
+#setupScreen header { border-bottom-color:#3b3025; }
+.brand .stripe { background:var(--accent); }
+.brand span { color:#c6ccd2; }
+#angle { color:#ff9b29; }
+#hint { color:#aab5c1; line-height:1.5; }
+#setupScreen footer { border-top-color:#343d47; }
+#startBtn { background:var(--accent); border-color:#ffad50; color:#211407; box-shadow:0 5px 18px #ff870017; }
+#vpnNotice { background:#221d16; border-color:#5d4b32; color:#d5bd9b; }
+@media (prefers-reduced-motion:reduce) {
+  .face-button, .action-btn, #settingsBtn, .utility-button { transition:none; }
+}
+
 </style>
 </head>
 <body>
@@ -630,7 +783,7 @@
       </div>
     </div>
     <div id="telemetryStrip" class="stale">
-      <div class="gear-card"><div class="instrument-label">GEAR</div><div id="gearIndicator">—</div></div>
+      <div class="gear-card"><div class="instrument-label">档位 / GEAR</div><div id="gearIndicator">—</div></div>
       <div class="rpm-instrument">
         <div id="rpmBarWrap"><div id="rpmBarFill"></div><div id="rpmLeds" aria-label="转速换挡灯"><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i></div></div>
         <div class="rpm-caption"><span id="rpmValue">— RPM</span><span id="shiftHint">转速灯</span></div>
@@ -664,8 +817,8 @@
   </div>
 
     <div class="quickPedals">
-      <button id="fullThrottleBtn" type="button" aria-label="按住满油，松手归零">满油</button>
-      <button id="fullBrakeBtn" type="button" aria-label="按住全刹车，松手归零">全刹车</button>
+      <button id="fullThrottleBtn" type="button" aria-label="RT，按住满油或菜单翻页，松手归零"><span class="quick-title">满油</span><small>RT · 菜单翻页</small></button>
+      <button id="fullBrakeBtn" type="button" aria-label="LT，按住全刹车或菜单翻页，松手归零"><span class="quick-title">全刹车</span><small>LT · 菜单翻页</small></button>
     </div>
   <div id="brakeZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="brake">Brake</span><span class="pct">0%</span></div>
   <div id="throttleZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="throttle">Throttle</span><span class="pct">0%</span></div>
@@ -674,7 +827,7 @@
 <!-- ===================== SETTINGS OVERLAY (drive mode) ===================== -->
 <div id="settingsOverlay">
   <div id="settingsPanel">
-    <div class="menu-heading"><span>控制器设置</span><small>所有设置一屏完成</small></div>
+    <div class="menu-heading"><span>控制器设置</span><small>木瓜橙 · 赛车控制</small></div>
     <div id="menuCards">
       <section class="menu-section" id="nativeSettingsSection"><div class="menu-section-title">连接与震动</div><div id="nativeSettingsGroup"></div></section>
       <section class="menu-section" id="steerSettingsSection"><div class="menu-section-title">满转向角度 · 单侧</div>
@@ -853,8 +1006,7 @@ function setSteeringAssistMode(mode) {
   if (mode==='game') showGameAssistGuide();
 }
 function showGameAssistGuide() {
-  closeSettings();
-  resetQuickPedals(); feedbackPaused=true;
+  detailsOpen=true; feedbackPaused=true; releaseAllInputs();
   document.getElementById('connectionDetailsTitle').textContent='F1 25 游戏内转向辅助';
   document.getElementById('connectionDetailsText').textContent='请先暂停游戏，在设置中找到“辅助 / 驾驶辅助（Assists）”，将“转向辅助（Steering Assist）”设为开启。\n\n如果该项不可用，请检查当前驾驶风格或比赛房间是否允许辅助。开启它还会联动刹车辅助、ABS 和牵引力控制。\n\n这里是设置指引，未更改游戏开关；游戏内实际设置以 F1 25 显示为准。';
   document.getElementById('connectionDetails').showModal();
@@ -919,6 +1071,9 @@ let lastShiftBuzzAt = 0;
 
 let feedbackRoad = {speed:0, kerb:0, seenAt:0};
 let feedbackPaused = false;
+let settingsOpen = false;
+let detailsOpen = false;
+function controlsEnabled() { return running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN; }
 let lastCurbImpactAt = 0;
 let lastFeedbackAt = 0;
 let lastFeedback = {intensity:0,sharpness:0,roughness:0};
@@ -938,9 +1093,9 @@ function updateRaceFeedback(throttle, brake) {
   const kerb=allowed && now-feedbackRoad.seenAt<250 && feedbackRoad.speed>5 ? feedbackRoad.kerb : 0;
   // Native curb cues supply the road texture; avoid layering the old sharp rumble on top.
   const road=kerb>0 && typeof window.__nativeCurbImpact!=='function' ? Math.min(0.72, (0.34+0.09*kerb)*Math.min(1,feedbackRoad.speed/90)) : 0;
-  const background=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250 ? 0.055 : 0;
-  const intensity=Math.min(0.9,background+Math.max(throttle*0.16,brake*0.4)+road);
-  const sharpness=road>0?0.18:brake>0?0.65:0.22;
+  const background=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250 ? 0.12 : 0;
+  const intensity=Math.min(0.9,background+Math.max(0.34*Math.sqrt(throttle),brake*0.4)+road);
+  const sharpness=road>0?0.18:brake>0?0.65:throttle>0?0.22:0.12;
   const frame={intensity,sharpness,roughness:0};
   const changed=Math.abs(frame.intensity-lastFeedback.intensity)>0.015 || frame.roughness!==lastFeedback.roughness || (intensity>0 && frame.sharpness!==lastFeedback.sharpness);
   if (!changed && now-lastFeedbackAt<80) return;
@@ -1004,7 +1159,7 @@ function onTelemetry(snapshot) {
   drsIndicatorEl.classList.toggle('available',!drsActive && available);
   drsIndicatorEl.classList.toggle('approaching',!drsActive && !available && distance>0);
   drsStateEl.textContent = drsActive?'已开启':available?'可开启 · 按 Y':distance>0?distance+' m 后':snapshot.statusValid===true?'不可用':'待状态数据';
-  if (navigator.vibrate) {
+  if (controlsEnabled() && navigator.vibrate) {
     const now=Date.now();
     if (inShiftZone && now-lastShiftBuzzAt>600) { navigator.vibrate(15); lastShiftBuzzAt=now; }
     if (lastGear!==null && gear!==lastGear) navigator.vibrate(25);
@@ -1023,98 +1178,73 @@ function setStatus(key, live) {
   const text = t(key);
   statusTexts.forEach(el => el.textContent = text);
   statusDots.forEach(el => el.classList.toggle('live', !!live));
+  document.getElementById('driveStatus').dataset.state=live?'connected':key==='connecting'?'connecting':'disconnected';
 }
 
 /* ---------------------------------------------------------------------
  * Throttle/brake pedals: in analog mode, the touch position along the
  * pedal sets the value directly (top = 100%, bottom = 0%), like a real
- * vertical fader. Releasing eases the value down over a few frames
- * instead of cutting to zero instantly.
+ * vertical fader. Each pedal tracks its own finger and releases immediately.
  * ------------------------------------------------------------------- */
-const PEDAL_RELEASE_DECAY = 0.80;
-
+const inputResetters = [];
 function createPedal(zoneEl, pctEl) {
-  const state = { value: 0, active: false, releasing: false };
+  const state = {value:0, pointer:null};
   const fillEl = zoneEl.querySelector('.pedalFill');
-
   function render() {
-    pctEl.textContent = Math.round(state.value * 100) + '%';
-    zoneEl.classList.toggle('pressed', state.value > 0.04);
-    if (fillEl) fillEl.style.height = (state.value * 100) + '%';
+    pctEl.textContent=Math.round(state.value*100)+'%';
+    zoneEl.classList.toggle('pressed',state.value>0.01);
+    zoneEl.setAttribute('aria-pressed',String(state.pointer!==null));
+    if(fillEl) fillEl.style.height=state.value*100+'%';
   }
-
   function valueFromPointer(event) {
-    const rect = zoneEl.getBoundingClientRect();
-    // A clockwise-rotated pedal's visual top is the physical right edge.
-    const value = matchMedia('(orientation: portrait)').matches
-      ? (event.clientX - rect.left) / rect.width
-      : (rect.bottom - event.clientY) / rect.height;
-    return Math.max(0, Math.min(1, value));
+    const rect=zoneEl.getBoundingClientRect();
+    const value=matchMedia('(orientation: portrait)').matches ?
+      (event.clientX-rect.left)/rect.width : (rect.bottom-event.clientY)/rect.height;
+    return Math.max(0,Math.min(1,value));
   }
-
-  zoneEl.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    zoneEl.setPointerCapture(e.pointerId);
-    state.releasing = false;
-    state.active = true;
-    state.value = analogPedals ? valueFromPointer(e) : 1;
-    render();
+  function reset() { state.pointer=null; state.value=0; render(); }
+  zoneEl.addEventListener('pointerdown',event=>{
+    event.preventDefault();
+    if(!controlsEnabled() || state.pointer!==null) return;
+    state.pointer=event.pointerId;
+    zoneEl.setPointerCapture(event.pointerId);
+    state.value=valueFromPointer(event); render(); sendImmediatePedals();
   });
-  zoneEl.addEventListener('pointermove', (e) => {
-    if (!state.active || !analogPedals) return;
-    state.value = valueFromPointer(e);
-    render();
+  zoneEl.addEventListener('pointermove',event=>{
+    if(event.pointerId!==state.pointer || !controlsEnabled()) return;
+    state.value=valueFromPointer(event); render(); sendImmediatePedals();
   });
-  function release() {
-    if (!state.active) return;
-    state.active = false;
-    if (analogPedals) {
-      state.releasing = true;
-    } else {
-      state.value = 0;
-      render();
-    }
+  function release(event) {
+    if(event?.pointerId!==state.pointer) return;
+    reset(); sendImmediatePedals();
   }
-  zoneEl.addEventListener('pointerup', release);
-  zoneEl.addEventListener('pointercancel', release);
-  zoneEl.addEventListener('pointerleave', release);
-
-  return {
-    getValue() { return state.value; },
-    reset() { state.value = 0; state.active = false; state.releasing = false; render(); },
-    tick() {
-      if (state.releasing) {
-        state.value *= PEDAL_RELEASE_DECAY;
-        if (state.value < 0.01) {
-          state.value = 0;
-          state.releasing = false;
-        }
-      }
-      render();
-      return state.value;
-    },
-  };
+  zoneEl.addEventListener('pointerup',release);
+  zoneEl.addEventListener('pointercancel',release);
+  zoneEl.addEventListener('lostpointercapture',release);
+  inputResetters.push(reset);
+  return {getValue:()=>state.value,reset,tick:()=>state.value};
 }
 
 const brakePedal = createPedal(document.getElementById('brakeZone'), brakePct);
 const throttlePedal = createPedal(document.getElementById('throttleZone'), throttlePct);
 
 let sendFrame = 0;
-function resetQuickPedals() {
-  steeringLockSide=0;
-  stopRaceFeedback();
-  controls.fullThrottle = false;
-  controls.fullBrake = false;
-  throttlePedal.reset();
-  brakePedal.reset();
-  document.getElementById('fullThrottleBtn').classList.remove('pressed');
-  document.getElementById('fullBrakeBtn').classList.remove('pressed');
+function releaseAllInputs() {
+  Object.keys(controls).forEach(key=>controls[key]=false);
+  inputResetters.forEach(reset=>reset());
+  steeringLockSide=0; lastSteeringCueAt=0;
+  stopRaceFeedback(); renderPedalReadouts(0,0);
+  if(ws?.readyState===WebSocket.OPEN) ws.send('{}');
 }
+function resetQuickPedals() { releaseAllInputs(); }
+
 function renderPedalReadouts(throttle, brake) {
   throttlePct.textContent = Math.round(throttle * 100) + '%';
   brakePct.textContent = Math.round(brake * 100) + '%';
   document.querySelector('#throttleZone .pedalFill').style.height = throttle * 100 + '%';
   document.querySelector('#brakeZone .pedalFill').style.height = brake * 100 + '%';
+  document.getElementById('throttleZone').classList.toggle('pressed',throttle>0.01);
+  document.getElementById('brakeZone').classList.toggle('pressed',brake>0.01);
 }
 function sendImmediatePedals() {
   const throttle = controls.fullThrottle ? 1 : throttlePedal.getValue();
@@ -1146,6 +1276,7 @@ function toggleFullscreen() {
 
 let reconnectTimer = null;
 function connect() {
+  releaseAllInputs();
   clearTimeout(reconnectTimer);
   const previous = ws;
   ws = null;
@@ -1156,6 +1287,7 @@ function connect() {
   connection.onopen = () => {
     if (ws !== connection) return;
     window.__nativeLastError = '';
+    releaseAllInputs();
     setStatus('connected', true);
   };
   connection.onclose = () => {
@@ -1177,9 +1309,8 @@ function connect() {
   };
 }
 window.__nativeReconnect = () => {
-  feedbackPaused=false;
   window.__nativeLastError = '';
-  document.getElementById('settingsOverlay').classList.remove('open');
+  releaseAllInputs();
   if (running) connect();
   else start();
 };
@@ -1249,24 +1380,31 @@ function calibrate() {
   document.getElementById('calibrationNote').textContent='正在校准…请握稳手机';
 }
 
-function bindHold(el, onChange) {
-  const set = (v) => { onChange(v); el.classList.toggle('pressed', !!v); };
-  el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.setPointerCapture(e.pointerId); set(true); });
-  el.addEventListener('pointerup', () => set(false));
-  el.addEventListener('pointercancel', () => set(false));
-  el.addEventListener('pointerleave', () => set(false));
+function bindHold(el,onChange) {
+  const pointers=new Set();
+  let held=false;
+  const display=value=>{el.classList.toggle('pressed',value);el.setAttribute('aria-pressed',String(value));};
+  function update() {
+    const next=pointers.size>0;
+    if(next===held) return;
+    held=next; onChange(next); display(next); sendImmediatePedals();
+  }
+  el.addEventListener('pointerdown',event=>{
+    event.preventDefault();
+    if(!controlsEnabled()) return;
+    el.setPointerCapture(event.pointerId); pointers.add(event.pointerId); update();
+  });
+  function release(event) {
+    if(!event || !pointers.delete(event.pointerId)) return;
+    update();
+  }
+  el.addEventListener('pointerup',release);
+  el.addEventListener('pointercancel',release);
+  el.addEventListener('lostpointercapture',release);
+  inputResetters.push(()=>{pointers.clear();held=false;onChange(false);display(false);});
 }
-
-bindHold(document.getElementById('fullThrottleBtn'), value => {
-  controls.fullThrottle = value;
-  if (!value) throttlePedal.reset();
-  sendImmediatePedals();
-});
-bindHold(document.getElementById('fullBrakeBtn'), value => {
-  controls.fullBrake = value;
-  if (!value) brakePedal.reset();
-  sendImmediatePedals();
-});
+bindHold(document.getElementById('fullThrottleBtn'),value=>controls.fullThrottle=value);
+bindHold(document.getElementById('fullBrakeBtn'),value=>controls.fullBrake=value);
 bindHold(document.getElementById('gameMenuBtn'), v => controls.menuStart = v);
 bindHold(document.getElementById('gearUpBtn'), v => controls.gearUp = v);
 bindHold(document.getElementById('gearDownBtn'), v => controls.gearDown = v);
@@ -1298,17 +1436,21 @@ function updateSteeringRange() {
   document.getElementById('steeringRange').textContent = '满转向 ±' + maxAngleDeg + '°' + (steeringAssistMode==='stable' ? ' · 稳定' : '');
 }
 
+let lastSteeringCueAt=0;
 function updateSteeringLockCue(relative) {
-  if (!running || document.hidden || feedbackPaused || autoCalibratePending || !lastMotionAt || Date.now()-lastMotionAt>250 || ws?.readyState!==WebSocket.OPEN) { steeringLockSide=0; return; }
-  const amount=Math.abs(relative)/maxAngleDeg;
-  if (amount<0.88) { steeringLockSide=0; return; }
-  const side=Math.sign(relative);
-  if (amount>=1 && side!==steeringLockSide) {
-    steeringLockSide=side;
-    if (typeof window.__nativeSteeringLimit==='function') window.__nativeSteeringLimit();
-    else if (navigator.vibrate) navigator.vibrate(140);
+  const now=Date.now();
+  const allowed=controlsEnabled() && !autoCalibratePending && lastMotionAt>0 && now-lastMotionAt<=250;
+  const amount=allowed?Math.abs(relative)/maxAngleDeg:0;
+  // A small release margin prevents chatter at the exact angle boundary.
+  const active=allowed && amount>=(steeringLockSide?0.97:1);
+  const side=active?Math.sign(relative):0;
+  if(side!==steeringLockSide || (active && now-lastSteeringCueAt>=80)) {
+    steeringLockSide=side; lastSteeringCueAt=now;
+    if(typeof window.__nativeSteeringLimit==='function') window.__nativeSteeringLimit(active);
+    else if(active && navigator.vibrate) navigator.vibrate(100);
   }
 }
+
 function updateSteeringValue() {
   const relative = autoCalibratePending || !lastMotionAt || Date.now()-lastMotionAt>250 ? 0 : filteredRoll;
   const linear = Math.max(-1, Math.min(1, relative / maxAngleDeg));
@@ -1336,6 +1478,11 @@ function sendLoop() {
 }
 
 function sendControlSnapshot(throttleValue, brakeValue) {
+  if(!controlsEnabled()) {
+    updateRaceFeedback(0,0);
+    if(ws?.readyState===WebSocket.OPEN) ws.send('{}');
+    return;
+  }
   updateRaceFeedback(throttleValue, brakeValue);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({
@@ -1369,7 +1516,7 @@ preferLandscape();
 
 async function start() {
   if (running) return;
-  feedbackPaused=false;
+  settingsOpen=false; detailsOpen=false; feedbackPaused=false;
   if (typeof window.__nativeRequestMotion === 'function') {
     await window.__nativeRequestMotion();
   } else if (typeof DeviceMotionEvent !== 'undefined' &&
@@ -1414,7 +1561,9 @@ function stop() {
   driveScreen.classList.remove('active');
   setupScreen.style.display = 'grid';
   document.getElementById('settingsOverlay').classList.remove('open');
-  if (ws) ws.close();
+  const previous=ws; ws=null; if(previous)previous.close();
+  settingsOpen=false; detailsOpen=false; feedbackPaused=false;
+  setStatus('notConnected',false);
 }
 
 function openCertTab() {
@@ -1446,17 +1595,16 @@ document.getElementById('certBtn').addEventListener('click', openCertTab);
 document.getElementById('fullscreenBtn1').addEventListener('click', toggleFullscreen);
 
 function openSettings() {
-  resetQuickPedals(); brakePedal.reset(); throttlePedal.reset();
-  Object.keys(controls).forEach(key=>controls[key]=false);
-  renderPedalReadouts(0,0); sendControlSnapshot(0,0);
-  feedbackPaused=true;
-  stopRaceFeedback();
+  settingsOpen=true; feedbackPaused=true;
+  releaseAllInputs();
   document.getElementById('settingsOverlay').classList.add('open');
 }
-function closeSettings() { feedbackPaused=false; document.getElementById('settingsOverlay').classList.remove('open'); }
-document.getElementById('settingsBtn').addEventListener('click', openSettings);
-document.getElementById('settingsOverlay').addEventListener('click',event=>{if(event.target.id==='settingsOverlay')closeSettings();});
-document.addEventListener('keydown',event=>{if(event.key==='Escape')closeSettings();});
+function closeSettings() {
+  releaseAllInputs(); settingsOpen=false; feedbackPaused=detailsOpen;
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+document.getElementById('settingsBtn').addEventListener('click',openSettings);
+document.addEventListener('keydown',event=>{if(event.key==='Escape' && !detailsOpen && settingsOpen)closeSettings();});
 document.getElementById('closeSettingsBtn').addEventListener('click', closeSettings);
 document.getElementById('calBtn2').addEventListener('click', calibrate);
 document.getElementById('certBtn2').addEventListener('click', openCertTab);
@@ -1471,20 +1619,18 @@ document.querySelectorAll('.lang-preset').forEach(btn => {
 });
 
 function showConnectionDetails() {
+  detailsOpen=true; feedbackPaused=true; releaseAllInputs();
   document.getElementById('connectionDetailsTitle').textContent='连接状态';
-  resetQuickPedals(); brakePedal.reset(); throttlePedal.reset();
-  Object.keys(controls).forEach(key=>controls[key]=false);
-  renderPedalReadouts(0,0); sendControlSnapshot(0,0);
-  document.getElementById('connectionDetailsText').textContent = document.getElementById('statusText2').textContent;
-  feedbackPaused=true; stopRaceFeedback();
+  document.getElementById('connectionDetailsText').textContent=document.getElementById('statusText2').textContent;
   document.getElementById('connectionDetails').showModal();
 }
+
 document.getElementById('driveStatus').addEventListener('click', showConnectionDetails);
 document.getElementById('driveStatus').addEventListener('keydown', event => {
   if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showConnectionDetails(); }
 });
 document.getElementById('connectionDetailsClose').addEventListener('click', () => document.getElementById('connectionDetails').close());
-document.getElementById('connectionDetails').addEventListener('close', () => { feedbackPaused=false; });
+document.getElementById('connectionDetails').addEventListener('close',()=>{detailsOpen=false;feedbackPaused=settingsOpen;releaseAllInputs();});
 
 [['assistOffBtn','off'],['assistStableBtn','stable'],['assistGameBtn','game']].forEach(([id,mode]) => document.getElementById(id).addEventListener('click',()=>setSteeringAssistMode(mode)));
 updateSteeringAssistMenu();

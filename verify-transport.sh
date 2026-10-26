@@ -4,6 +4,8 @@ python3 prepare-assets.py
 tempdir=$(mktemp -d)
 server_pid=''
 trap 'if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi; rm -rf "$tempdir"' EXIT
+xcrun swiftc -parse-as-library ControlInputBuffer.swift ControlInputBufferSmoke.swift -o "$tempdir/control-input-smoke"
+"$tempdir/control-input-smoke"
 cat > "$tempdir/openssl.cnf" <<'CONFIG'
 [req]
 distinguished_name=dn
