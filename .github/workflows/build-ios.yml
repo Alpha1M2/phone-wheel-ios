@@ -1,0 +1,40 @@
+name: Build iPhone app
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          xcodegen generate
+      - name: Build unsigned iPhone app
+        run: |
+          set -o pipefail
+          xcodebuild -project PhoneWheel.xcodeproj -scheme PhoneWheel \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tee build.log
+      - name: Package IPA for local signing
+        run: |
+          mkdir -p package/Payload
+          cp -R build/Build/Products/Release-iphoneos/PhoneWheel.app package/Payload/
+          cd package
+          zip -qr ../PhoneWheel-unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PhoneWheel-unsigned
+          path: PhoneWheel-unsigned.ipa
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
