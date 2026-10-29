@@ -1089,6 +1089,16 @@ button:focus-visible, [role="button"]:focus-visible {
 .race-dial i::before { content:""; position:absolute; inset:5px; border:1px solid #89959d; border-radius:50%; background:linear-gradient(135deg,#48545d,#0b1116 70%); box-shadow:inset 0 1px 1px #fff8,0 2px 4px #000; }
 .race-dial i::after { content:""; position:absolute; top:6px; left:19px; height:16px; width:5px; border-radius:2px; background:#ff991e; transform:rotate(-22deg); transform-origin:50% 15px; box-shadow:0 0 2px #ffad3c; }
 .race-dial:active i { filter:brightness(1.3); }
+.race-brand { display:none; }
+[data-controller-skin="race"] #cockpitWordmark { display:flex; justify-content:center; align-items:center; gap:7px; font-size:0; letter-spacing:0; }
+[data-controller-skin="race"] #cockpitWordmark > b { display:none; }
+[data-controller-skin="race"] #cockpitWordmark .race-brand { display:inline-block; color:#ff951f; font:italic 850 17px/1 Arial,sans-serif; letter-spacing:-.045em; }
+[data-controller-skin="race"] #cockpitWordmark::after { content:"RACE CONTROL"; display:block; font-size:6px; letter-spacing:.13em; color:#a2dce3; font-style:normal; }
+[data-controller-skin="race"] #telemetryStrip { border-top-color:#ff9c37; box-shadow:0 0 0 4px #020608,0 0 0 5px #e88424,0 4px 0 6px #050809,inset 0 2px 12px #000; }
+[data-controller-skin="race"] #topAuxButtons .action-btn { border-bottom-color:#ff9f32; }
+[data-controller-skin="race"] .steering-fill { background:#a8e5ec; }
+[data-controller-skin="race"] #raceDials .race-dial i::after { background:#ff9b27; box-shadow:0 0 0 1px #e07817; }
+[data-controller-skin="race"] #raceDials .race-dial span { color:#d2e5e8; }
 @media (min-width:850px) and (orientation:landscape) {
  [data-controller-skin="race"] #raceDials { width:118px; }
  [data-controller-skin="race"] #shoulderRow { left:153px; right:131px; }
@@ -1166,13 +1176,15 @@ button:focus-visible, [role="button"]:focus-visible {
 <path d="M959 28Q988 44 984 105L986 373Q982 438 920 455L886 446 874 379 884 291 875 214 887 117 879 30Z" fill="url(#raceRubber)" stroke="#66737b" stroke-width="2"/>
 <path d="M41 28Q12 44 16 105L14 373Q18 438 80 455L114 446 126 379 116 291 125 214 113 117 121 30Z" fill="url(#raceDots)" opacity=".75"/>
 <path d="M959 28Q988 44 984 105L986 373Q982 438 920 455L886 446 874 379 884 291 875 214 887 117 879 30Z" fill="url(#raceDots)" opacity=".75"/>
-<path d="M23 72Q14 28 61 18M19 359q0 65 66 89M977 72q9-44-38-54M981 359q0 65-66 89" fill="none" stroke="#ff961c" stroke-width="5"/>
+<path d="M23 72Q14 28 61 18M19 359q0 65 66 89M977 72q9-44-38-54M981 359q0 65-66 89" fill="none" stroke="#ff961c" stroke-width="8"/>
 <path d="M133 28q40 3 63 14M867 28q-40 3-63 14" fill="none" stroke="#ff9b26" stroke-width="3"/>
+<path d="M143 30q35 3 53 12M857 30q-35 3-53 12" fill="none" stroke="#9bdee6" stroke-width="2"/>
+<path d="M120 43 132 113 125 211 132 290 128 379 114 438M880 43 868 113 875 211 868 290 872 379 886 438" fill="none" stroke="#ed8c25" stroke-width="2"/>
 <use href="#raceScrew" x="137" y="71"/><use href="#raceScrew" x="865" y="71"/>
 <use href="#raceScrew" x="145" y="420"/><use href="#raceScrew" x="855" y="420"/>
 <use href="#raceScrew" x="330" y="431"/><use href="#raceScrew" x="670" y="431"/>
 </svg></div>
-  <div id="cockpitWordmark"><b>F1</b> RACE CONTROLLER</div>
+  <div id="cockpitWordmark"><b>F1</b> RACE CONTROLLER<span class="race-brand">McLaren</span></div>
   <div id="driveTopBar">
     <div id="driveStatus" role="button" tabindex="0" aria-label="查看完整连接状态" title="点击查看完整连接状态"><div id="statusDot2" class="live" style="width:8px;height:8px;border-radius:50%;background:var(--ok)"></div><span id="statusText2" aria-live="polite" data-i18n="driving">Driving</span></div>
 
@@ -2169,7 +2181,7 @@ updateSteeringMeter(0);
 
 // A registry keeps presentation extensible while sharing a single input/telemetry model.
 const CONTROLLER_SKINS = Object.freeze([
- {id:'race',name:'F1 立体座舱',description:'立体握把 · 实体圆键 · 嵌入式仪表'},
+ {id:'race',name:'迈凯伦立体座舱',description:'橙色饰条 · 立体握把 · 嵌入式仪表'},
  {id:'f1',name:'F1 中央仪表',description:'蝶形面板 · 中央大屏 · 碳纤维与橙色细节'},
  {id:'classic',name:'经典控制台',description:'原有皮肤 · 横向仪表 · 明亮踏板'}
 ]);
