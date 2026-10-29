@@ -903,6 +903,130 @@ button:focus-visible, [role="button"]:focus-visible {
   #steeringAssistNote { font-size:8px; }
 }
 
+/* Skin 0.5: the dashboard is the wheel, rather than a wheel icon above a dashboard. */
+#cockpitWordmark { display:none; }
+#skinPicker { position:absolute; inset:0; z-index:80; background:#070b10f5; display:none; align-items:center; justify-content:center; padding:16px max(16px,var(--wheel-safe-right)) max(16px,var(--wheel-safe-bottom)) max(16px,var(--wheel-safe-left)); }
+#skinPicker.open { display:flex; }
+.skin-panel { width:min(650px,100%); max-height:100%; border:1px solid #6d5236; border-top:3px solid #ff992d; border-radius:16px; background:#151b22; padding:16px; }
+.skin-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; }
+.skin-heading h2 { margin:0; font-size:19px; }
+#closeSkinBtn { min-width:80px; min-height:44px; }
+#skinChoices { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.skin-option { min-width:0; min-height:125px; text-align:left; padding:12px; display:flex; flex-direction:column; gap:7px; border:1px solid #47525e; }
+.skin-option[aria-pressed="true"] { border-color:#ffa33d; box-shadow:inset 0 0 0 1px #ffa33d; }
+.skin-option strong { font-size:15px; }
+.skin-option small { font-size:10px; font-weight:400; color:#b0bdc8; line-height:1.4; }
+.skin-swatch { height:39px; border-radius:5px; width:100%; display:flex; justify-content:center; align-items:center; gap:6px; background:#090d12; }
+.skin-swatch i { width:25%; height:23px; border:1px solid #777; background:#141f29; }
+.skin-swatch::before,.skin-swatch::after { content:""; width:12px; height:28px; border-radius:6px; background:#ed4351; }
+.skin-swatch::after { background:#21d88b; }
+.skin-option[data-skin-choice="f1"] .skin-swatch { background:repeating-linear-gradient(45deg,#222930 0 3px,#12171d 3px 6px); }
+.skin-option[data-skin-choice="f1"] .skin-swatch i { width:40%; border-top:3px solid #ff9a29; }
+.skin-note { margin:12px 0 0; color:#a9b5c1; font-size:11px; }
+
+[data-controller-skin="f1"] #driveScreen {
+ --pedal-width:clamp(68px,calc(20 * var(--wheel-vh)),88px);
+ --deck-left:calc(max(12px,var(--wheel-safe-left)) + var(--pedal-width) + 10px);
+ --deck-right:calc(max(12px,var(--wheel-safe-right)) + var(--pedal-width) + 10px);
+ background:radial-gradient(ellipse at 50% 50%,#1f2730 0,#0b1016 70%);
+}
+[data-controller-skin="f1"] #driveScreen::before {
+ pointer-events:none; z-index:0; top:8px; bottom:max(8px,var(--wheel-safe-bottom)); height:auto;
+ left:max(4px,var(--wheel-safe-left)); right:max(4px,var(--wheel-safe-right));
+ border:1px solid #77818b; border-top:3px solid #d67b25; border-bottom:3px solid #794a21;
+ border-radius:48px 48px 62px 62px;
+ background:repeating-linear-gradient(45deg,#ffffff04 0 2px,#00000012 2px 5px),repeating-linear-gradient(-45deg,#28313a 0 3px,#141b22 3px 6px);
+ box-shadow:inset 0 2px 3px #ffffff30,inset 0 -8px 25px #000b;
+}
+[data-controller-skin="f1"] #driveScreen::after { display:none; }
+[data-controller-skin="f1"] #cockpitWordmark { display:block; position:absolute; top:12px; left:40%; right:28%; text-align:center; font-size:9px; letter-spacing:.14em; color:#c8d0d8; pointer-events:none; white-space:nowrap; }
+[data-controller-skin="f1"] #cockpitWordmark b { color:#ff9a2f; }
+[data-controller-skin="f1"] #driveMid {
+ top:64px; bottom:calc(max(5px,var(--wheel-safe-bottom)) + 24px); left:var(--deck-left); right:var(--deck-right);
+ display:grid; grid-template-columns:132px minmax(0,1fr) 104px; grid-template-rows:minmax(0,1fr) 36px; gap:7px 10px; z-index:1;
+}
+[data-controller-skin="f1"] #controlDeck,[data-controller-skin="f1"] #buttonCluster { display:contents; }
+[data-controller-skin="f1"] #shiftStack { position:absolute; top:0; left:0; width:132px; height:calc(100% - 140px); min-height:100px; gap:7px; }
+[data-controller-skin="f1"] #shiftStack .face-button { border-radius:18px; background:linear-gradient(145deg,#2b353f,#131b23); border:1px solid #76828e; box-shadow:inset 0 1px 1px #ffffff28,0 3px 5px #0008; padding:8px; grid-template-columns:34px minmax(0,1fr); }
+[data-controller-skin="f1"] #shiftStack .face-button::before { width:34px; height:34px; min-width:34px; font-size:25px; box-shadow:0 0 0 3px #0a1016,0 0 0 4px #87919c; }
+[data-controller-skin="f1"] #shiftStack .face-button span { font-size:17px; }
+[data-controller-skin="f1"] #shiftStack .face-note { font-size:9px; }
+[data-controller-skin="f1"] #gearUpBtn.pressed { background:#205b3d; }
+[data-controller-skin="f1"] #gearDownBtn.pressed { background:#244c79; }
+[data-controller-skin="f1"] #dpadRow { position:absolute; left:0; bottom:0; width:132px; height:132px; display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,44px); gap:0; }
+[data-controller-skin="f1"] #dpadRow .action-btn { border-radius:9px; border:1px solid #84909b; background:linear-gradient(145deg,#394550,#1b232c); font-size:23px; }
+[data-controller-skin="f1"] #dpadUpBtn { grid-column:2; grid-row:1; }
+[data-controller-skin="f1"] #dpadLeftBtn { grid-column:1; grid-row:2; }
+[data-controller-skin="f1"] #dpadRightBtn { grid-column:3; grid-row:2; }
+[data-controller-skin="f1"] #dpadDownBtn { grid-column:2; grid-row:3; }
+[data-controller-skin="f1"] #dpadRow::after { content:""; display:block; grid-column:2; grid-row:2; background:#171f27; border-radius:8px; border:1px solid #4b5965; width:auto; height:auto; position:static; }
+[data-controller-skin="f1"] #faceButtonRow { position:absolute; right:0; top:0; width:104px; height:calc(100% - 139px); display:grid; grid-template-columns:1fr; grid-template-rows:1fr 1fr; gap:7px; }
+[data-controller-skin="f1"] #faceButtonRow .face-button { border-radius:16px; padding:4px; display:grid; grid-template-columns:31px 1fr; grid-template-rows:1fr; gap:4px; align-items:center; background:linear-gradient(145deg,#2b353f,#131b23); border-color:#6e7a86; }
+[data-controller-skin="f1"] #faceButtonRow .face-button::before { width:31px; height:31px; min-width:31px; font-size:23px; grid-column:1; grid-row:1; box-shadow:0 0 0 2px #0a1016; }
+[data-controller-skin="f1"] #faceButtonRow .face-button span { grid-column:2; grid-row:1; font-size:12px; line-height:1.35; }
+[data-controller-skin="f1"] #faceButtonRow .face-note { display:none; }
+[data-controller-skin="f1"] #shoulderRow { position:absolute; right:0; bottom:0; width:104px; height:132px; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:6px; }
+[data-controller-skin="f1"] #lookLeftBtn { grid-column:1; grid-row:1; }
+[data-controller-skin="f1"] #lookRightBtn { grid-column:2; grid-row:1; }
+[data-controller-skin="f1"] #lookBackBtn { grid-column:1 / 3; grid-row:2; }
+[data-controller-skin="f1"] #shoulderRow .camera-button { border-radius:15px; background:linear-gradient(145deg,#2b353f,#131b23); border-color:#677786; }
+[data-controller-skin="f1"] #shoulderRow .camera-button small { display:none; }
+[data-controller-skin="f1"] #shoulderRow .camera-button span { font-size:11px; }
+
+/* A stationary, genuine data display. It never rotates with the small steering icon. */
+[data-controller-skin="f1"] #telemetryStrip { grid-column:2; grid-row:1; position:relative; width:100%; height:100%; padding:27px 10px 10px; display:grid; grid-template-columns:1fr 1.2fr; grid-template-rows:minmax(60px,1fr) 44px; gap:7px; border:2px solid #697580; border-radius:21px; background:radial-gradient(ellipse at 50% 0,#15242b,#050a0f 80%); box-shadow:0 0 0 4px #080d12,0 0 0 5px #8a939a,inset 0 3px 7px #000; }
+[data-controller-skin="f1"] .gear-card { grid-column:2; grid-row:1; align-self:center; text-align:center; padding:0; border:0; }
+[data-controller-skin="f1"] .gear-card .instrument-label { font-size:8px; color:#9aaab7; }
+[data-controller-skin="f1"] #gearIndicator { font-size:clamp(64px,calc(22 * var(--wheel-vh)),103px); line-height:1; color:#f6fbff; font-weight:850; font-variant-numeric:tabular-nums; }
+[data-controller-skin="f1"] #speedReadout { grid-column:1; grid-row:1; justify-self:center; align-self:center; font-size:clamp(27px,calc(9 * var(--wheel-vh)),44px); line-height:1; color:#fff; }
+[data-controller-skin="f1"] #speedReadout .unit { font-size:9px; letter-spacing:.16em; }
+[data-controller-skin="f1"] .rpm-instrument { position:static; display:contents; }
+[data-controller-skin="f1"] #rpmBarWrap { position:absolute; top:10px; left:11px; right:11px; width:auto; height:9px; }
+[data-controller-skin="f1"] #rpmLeds { gap:3px; }
+[data-controller-skin="f1"] .rpm-led { border-radius:50%; border-color:#59626b; }
+[data-controller-skin="f1"] .rpm-led:nth-child(n+11) { --led:#be70ff!important; }
+[data-controller-skin="f1"] .rpm-caption { grid-column:1; grid-row:2; align-self:center; display:flex; flex-direction:column; justify-content:center; gap:4px; font-size:10px; }
+[data-controller-skin="f1"] #shiftHint { font-size:8px; color:#ffa442; }
+[data-controller-skin="f1"] #drsIndicator { grid-column:2; grid-row:2; height:44px; min-height:44px; border-radius:7px; padding:3px; }
+[data-controller-skin="f1"] #drsIndicator b { font-size:17px; }
+[data-controller-skin="f1"] #drsState { font-size:8px; }
+[data-controller-skin="f1"] #instrumentRow { grid-column:2; grid-row:2; gap:5px; height:36px; }
+[data-controller-skin="f1"] #miniWheelWrap { display:none; }
+[data-controller-skin="f1"] .steering-center { display:flex; flex-direction:column; flex:0 0 63px; gap:3px; }
+[data-controller-skin="f1"] #miniAngle { font-size:15px; }
+[data-controller-skin="f1"] #steeringRange { font-size:7px; }
+[data-controller-skin="f1"] .steering-caption { font-size:7px; }
+[data-controller-skin="f1"] .steering-caption span:first-child:last-child { display:block; }
+[data-controller-skin="f1"] #steerLeftLimit,[data-controller-skin="f1"] #steerRightLimit { display:none; }
+[data-controller-skin="f1"] #topAuxButtons { z-index:2; left:var(--deck-left); top:10px; gap:5px; }
+[data-controller-skin="f1"] #topAuxButtons .action-btn { width:63px; min-width:0; height:44px; padding:4px; grid-template-columns:21px 1fr; column-gap:3px; border-radius:12px; }
+[data-controller-skin="f1"] #topAuxButtons .shoulder-button::before { width:21px; height:21px; min-width:21px; border-radius:50%; font-size:9px; color:#ffb255; background:#0c131a; border-color:#ff9b32; }
+[data-controller-skin="f1"] #topAuxButtons .shoulder-button span { font-size:10px; }
+[data-controller-skin="f1"] #topAuxButtons .shoulder-button small { font-size:6px; }
+[data-controller-skin="f1"] #driveTopBar .iconBtns { right:var(--deck-right); top:10px; gap:5px; }
+[data-controller-skin="f1"] #settingsBtn,[data-controller-skin="f1"] #gameMenuBtn { min-width:44px; width:49px; padding:5px; border-radius:12px; }
+[data-controller-skin="f1"] #settingsBtn span,[data-controller-skin="f1"] #gameMenuBtn span { display:none; }
+[data-controller-skin="f1"] #settingsBtn svg { width:22px; height:22px; }
+[data-controller-skin="f1"] #gameMenuBtn b { font-size:20px; }
+[data-controller-skin="f1"] #driveStatus { left:var(--deck-left); right:var(--deck-right); height:18px; bottom:max(3px,var(--wheel-safe-bottom)); z-index:2; }
+[data-controller-skin="f1"] .quickPedals button { height:clamp(64px,calc(23 * var(--wheel-vh)),96px); bottom:auto; top:18px; border-radius:22px; border:2px solid #b4bec8; box-shadow:0 0 0 4px #0b1016,inset 0 2px 3px #ffffff60; z-index:2; }
+[data-controller-skin="f1"] #fullBrakeBtn,[data-controller-skin="f1"] #brakeZone { left:max(12px,var(--wheel-safe-left)); }
+[data-controller-skin="f1"] #fullThrottleBtn,[data-controller-skin="f1"] #throttleZone { right:max(12px,var(--wheel-safe-right)); }
+[data-controller-skin="f1"] .quickPedals .quick-title { font-size:17px; }
+[data-controller-skin="f1"] .quickPedals small { font-size:7px; }
+[data-controller-skin="f1"] #brakeZone.analog,[data-controller-skin="f1"] #throttleZone.analog { bottom:calc(max(5px,var(--wheel-safe-bottom)) + 9px); height:calc(60 * var(--wheel-vh)); border:2px solid #9ca8b2; border-radius:22px; box-shadow:0 0 0 4px #0a1016,inset 0 1px 4px #ffffff50; padding-bottom:14px; z-index:2; }
+[data-controller-skin="f1"] #brakeZone.analog { background:#b9273d; }
+[data-controller-skin="f1"] #throttleZone.analog { background:#16bc7a; }
+[data-controller-skin="f1"] #brakeZone.analog .pedalFill { background:#ff5268; }
+[data-controller-skin="f1"] #throttleZone.analog .pedalFill { background:#5affaf; }
+[data-controller-skin="f1"] #dpadRow .action-btn.pressed,[data-controller-skin="f1"] #shoulderRow .camera-button.pressed { background:#ff9b31; color:#211409; }
+@media (min-width:850px) and (orientation:landscape) {
+ [data-controller-skin="f1"] #driveMid { grid-template-columns:140px minmax(0,1fr) 118px; gap:9px 13px; }
+ [data-controller-skin="f1"] #shiftStack { width:140px; }
+ [data-controller-skin="f1"] #faceButtonRow,[data-controller-skin="f1"] #shoulderRow { width:118px; }
+ [data-controller-skin="f1"] #faceButtonRow .face-button span { font-size:14px; }
+}
+
 </style>
 </head>
 <body>
@@ -958,6 +1082,7 @@ button:focus-visible, [role="button"]:focus-visible {
 
 <!-- ===================== DRIVE ===================== -->
 <div id="driveScreen">
+  <div id="cockpitWordmark"><b>F1</b> RACE CONTROLLER</div>
   <div id="driveTopBar">
     <div id="driveStatus" role="button" tabindex="0" aria-label="查看完整连接状态" title="点击查看完整连接状态"><div id="statusDot2" class="live" style="width:8px;height:8px;border-radius:50%;background:var(--ok)"></div><span id="statusText2" aria-live="polite" data-i18n="driving">Driving</span></div>
 
@@ -1052,12 +1177,21 @@ button:focus-visible, [role="button"]:focus-visible {
   <div id="throttleZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="throttle">Throttle</span><span class="pct">0%</span></div>
 </div>
 
+
+<div id="skinPicker" role="dialog" aria-modal="true" aria-labelledby="skinPickerTitle">
+ <div class="skin-panel">
+  <div class="skin-heading"><h2 id="skinPickerTitle">方向盘皮肤</h2><button id="closeSkinBtn" type="button">返回设置</button></div>
+  <div id="skinChoices"></div>
+  <p class="skin-note">选择立即生效并自动保存 · 所有皮肤共用你的按键与转向设置</p>
+ </div>
+</div>
+
 <!-- ===================== SETTINGS OVERLAY (drive mode) ===================== -->
 <div id="settingsOverlay">
   <div id="settingsPanel">
     <div class="menu-heading"><span>控制器设置</span><small>赛车控制</small></div>
     <div id="menuCards">
-      <section class="menu-section" id="nativeSettingsSection"><div class="menu-section-title">连接与震动</div><div id="nativeSettingsGroup"></div></section>
+      <section class="menu-section" id="nativeSettingsSection"><div class="menu-section-title">连接与震动</div><div id="nativeSettingsGroup"><button id="skinSettingsBtn" type="button">方向盘皮肤</button></div></section>
       <section class="menu-section" id="steerSettingsSection"><div class="menu-section-title">满转向角度 · 单侧</div>
         <div id="anglePresets">
           <button class="angle-preset" data-angle="45">45&deg;</button><button class="angle-preset" data-angle="60">60&deg;</button><button class="angle-preset" data-angle="90">90&deg;</button><button class="angle-preset" data-angle="120">120&deg;</button>
@@ -1409,7 +1543,7 @@ function onTelemetry(snapshot) {
   // Start the background layer on this packet while retaining held pedal feedback.
   refreshRaceFeedback();
   // Trigger an explicit impact before another asphalt sample can erase a short curb contact.
-  if (feedbackRoad.kerb>0 && feedbackRoad.speed>5 && running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN && telemetrySeenAt-lastCurbImpactAt>=240) {
+  if (feedbackRoad.kerb>0 && feedbackRoad.speed>5 && running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN && telemetrySeenAt-lastCurbImpactAt>=300) {
     lastCurbImpactAt=telemetrySeenAt;
     const strength=Math.min(1,0.65+0.07*feedbackRoad.kerb+0.2*Math.min(1,feedbackRoad.speed/150));
     if (typeof window.__nativeCurbImpact==='function') window.__nativeCurbImpact({strength});
@@ -1928,6 +2062,36 @@ setFullscreenButtonsVisible();
 updateAnglePresetButtons();
 updateSteeringRange();
 updateSteeringMeter(0);
+</script>
+<script>
+
+// A registry keeps presentation extensible while sharing a single input/telemetry model.
+const CONTROLLER_SKINS = Object.freeze([
+ {id:'f1',name:'F1 中央仪表',description:'蝶形面板 · 中央大屏 · 碳纤维与橙色细节'},
+ {id:'classic',name:'经典控制台',description:'原有皮肤 · 横向仪表 · 明亮踏板'}
+]);
+const skinPickerEl=document.getElementById('skinPicker');
+function selectControllerSkin(id) {
+ const chosen=CONTROLLER_SKINS.find(skin=>skin.id===id)||CONTROLLER_SKINS[0];
+ document.documentElement.dataset.controllerSkin=chosen.id;
+ try { localStorage.setItem('controllerSkin',chosen.id); } catch (_) {}
+ document.querySelectorAll('[data-skin-choice]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.skinChoice===chosen.id)));
+}
+for (const skin of CONTROLLER_SKINS) {
+ const button=document.createElement('button'); button.type='button';button.className='skin-option';button.dataset.skinChoice=skin.id;
+ const swatch=document.createElement('span');swatch.className='skin-swatch';swatch.setAttribute('aria-hidden','true');swatch.append(document.createElement('i'));
+ const title=document.createElement('strong');title.textContent=skin.name;
+ const description=document.createElement('small');description.textContent=skin.description;
+ button.append(swatch,title,description);button.addEventListener('click',()=>selectControllerSkin(skin.id));
+ document.getElementById('skinChoices').append(button);
+}
+let savedControllerSkin='f1';try { savedControllerSkin=localStorage.getItem('controllerSkin')||'f1'; } catch (_) {}
+selectControllerSkin(savedControllerSkin);
+document.getElementById('skinSettingsBtn').addEventListener('click',()=>{skinPickerEl.classList.add('open');document.getElementById('closeSkinBtn').focus();});
+function closeSkinPicker(){skinPickerEl.classList.remove('open');document.getElementById('skinSettingsBtn').focus();}
+document.getElementById('closeSkinBtn').addEventListener('click',closeSkinPicker);
+skinPickerEl.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();closeSkinPicker();}});
+
 </script>
 </body>
 </html>

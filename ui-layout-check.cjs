@@ -104,11 +104,26 @@ async function main(){
         await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
         await page.screenshot({path:path.join(out,`drive-${size.width}x${size.height}.png`),fullPage:false,animations:'disabled'});
         await measure(page,'drive',size);
+        const displayGeometry=await page.locator('#telemetryStrip').boundingBox();
+        if(displayGeometry.width<185||displayGeometry.height<140)failures.push(`${size.width}×${size.height}: central display too small`);
+        await page.evaluate(()=>selectControllerSkin('classic'));
+        await measure(page,'drive',size);
+        await page.screenshot({path:path.join(out,`classic-${size.width}x${size.height}.png`),animations:'disabled'});
+        await page.evaluate(()=>selectControllerSkin('f1'));
         // Exercise the actual settings button, preserving its control-release behavior.
         await page.locator('#settingsBtn').click();
         await page.locator('#assistAdaptiveBtn').click();
         await page.screenshot({path:path.join(out,`settings-${size.width}x${size.height}.png`),fullPage:false,animations:'disabled'});
         await measure(page,'settings',size);
+        await page.locator('#skinSettingsBtn').click();
+        for(const id of ['f1','classic']){
+          await page.locator(`[data-skin-choice="${id}"]`).click();
+          const saved=await page.evaluate(()=>localStorage.getItem('controllerSkin'));
+          if(saved!==id)failures.push(`${size.width}×${size.height}: skin not persisted ${id}`);
+        }
+        await page.screenshot({path:path.join(out,`skins-${size.width}x${size.height}.png`),animations:'disabled'});
+        await page.locator('#closeSkinBtn').click();
+        if(await page.locator('#skinPicker').isVisible())failures.push('Skin picker did not close');
       }catch(error){
         failures.push(`${size.width}×${size.height}: ${error.stack||error}`);
         await page.screenshot({path:path.join(out,`failure-${size.width}x${size.height}.png`),fullPage:false}).catch(()=>{});
