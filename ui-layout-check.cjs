@@ -15,7 +15,7 @@ const server=http.createServer((req,res)=>{
 const viewports=[{width:852,height:393,safe:59},{width:667,height:375,safe:0},{width:932,height:430,safe:59}];
 
 async function measure(page,screen,size){
-  const rootSelector=screen==='drive'?'#driveScreen':'#settingsPanel';
+  const rootSelector=screen==='drive'?'#driveScreen':screen==='skins'?'#skinPicker':'#settingsPanel';
   const geometry=await page.evaluate(({rootSelector,screen})=>{
     const root=document.querySelector(rootSelector), violations=[],notes=[];
     const rect=e=>{const b=e.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height,right:b.right,bottom:b.bottom};};
@@ -110,20 +110,28 @@ async function main(){
         await measure(page,'drive',size);
         await page.screenshot({path:path.join(out,`classic-${size.width}x${size.height}.png`),animations:'disabled'});
         await page.evaluate(()=>selectControllerSkin('f1'));
+        await measure(page,'drive',size);
+        await page.screenshot({path:path.join(out,`f1-${size.width}x${size.height}.png`),animations:'disabled'});
+        await page.evaluate(()=>selectControllerSkin('race'));
+        await measure(page,'drive',size);
+        await page.screenshot({path:path.join(out,`race-${size.width}x${size.height}.png`),animations:'disabled'});
         // Exercise the actual settings button, preserving its control-release behavior.
         await page.locator('#settingsBtn').click();
         await page.locator('#assistAdaptiveBtn').click();
         await page.screenshot({path:path.join(out,`settings-${size.width}x${size.height}.png`),fullPage:false,animations:'disabled'});
         await measure(page,'settings',size);
         await page.locator('#skinSettingsBtn').click();
-        for(const id of ['f1','classic']){
+        for(const id of ['race','f1','classic']){
           await page.locator(`[data-skin-choice="${id}"]`).click();
           const saved=await page.evaluate(()=>localStorage.getItem('controllerSkin'));
           if(saved!==id)failures.push(`${size.width}×${size.height}: skin not persisted ${id}`);
         }
         await page.screenshot({path:path.join(out,`skins-${size.width}x${size.height}.png`),animations:'disabled'});
+        await measure(page,'skins',size);
         await page.locator('#closeSkinBtn').click();
         if(await page.locator('#skinPicker').isVisible())failures.push('Skin picker did not close');
+        await page.locator('[data-angle="30"]').click();
+        if(await page.evaluate(()=>maxAngleDeg)!==30)failures.push('30 degree setting did not apply');
       }catch(error){
         failures.push(`${size.width}×${size.height}: ${error.stack||error}`);
         await page.screenshot({path:path.join(out,`failure-${size.width}x${size.height}.png`),fullPage:false}).catch(()=>{});

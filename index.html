@@ -925,13 +925,13 @@ button:focus-visible, [role="button"]:focus-visible {
 .skin-option[data-skin-choice="f1"] .skin-swatch i { width:40%; border-top:3px solid #ff9a29; }
 .skin-note { margin:12px 0 0; color:#a9b5c1; font-size:11px; }
 
-[data-controller-skin="f1"] #driveScreen {
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #driveScreen {
  --pedal-width:clamp(68px,calc(20 * var(--wheel-vh)),88px);
  --deck-left:calc(max(12px,var(--wheel-safe-left)) + var(--pedal-width) + 10px);
  --deck-right:calc(max(12px,var(--wheel-safe-right)) + var(--pedal-width) + 10px);
  background:radial-gradient(ellipse at 50% 50%,#1f2730 0,#0b1016 70%);
 }
-[data-controller-skin="f1"] #driveScreen::before {
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #driveScreen::before {
  pointer-events:none; z-index:0; top:8px; bottom:max(8px,var(--wheel-safe-bottom)); height:auto;
  left:max(4px,var(--wheel-safe-left)); right:max(4px,var(--wheel-safe-right));
  border:1px solid #77818b; border-top:3px solid #d67b25; border-bottom:3px solid #794a21;
@@ -939,96 +939,162 @@ button:focus-visible, [role="button"]:focus-visible {
  background:repeating-linear-gradient(45deg,#ffffff04 0 2px,#00000012 2px 5px),repeating-linear-gradient(-45deg,#1a2027 0 3px,#141a20 3px 6px);
  box-shadow:inset 0 2px 3px #ffffff30,inset 0 -8px 25px #000b;
 }
-[data-controller-skin="f1"] #driveScreen::after { display:none; }
-[data-controller-skin="f1"] #cockpitWordmark { display:block; position:absolute; top:12px; left:40%; right:28%; text-align:center; font-size:9px; letter-spacing:.14em; color:#c8d0d8; pointer-events:none; white-space:nowrap; }
-[data-controller-skin="f1"] #cockpitWordmark b { color:#ff9a2f; }
-[data-controller-skin="f1"] #driveMid {
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #driveScreen::after { display:none; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #cockpitWordmark { display:block; position:absolute; top:12px; left:40%; right:28%; text-align:center; font-size:9px; letter-spacing:.14em; color:#c8d0d8; pointer-events:none; white-space:nowrap; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #cockpitWordmark b { color:#ff9a2f; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #driveMid {
  top:64px; bottom:calc(max(5px,var(--wheel-safe-bottom)) + 24px); left:var(--deck-left); right:var(--deck-right);
  display:grid; grid-template-columns:132px minmax(0,1fr) 104px; grid-template-rows:minmax(0,1fr) 36px; gap:7px 10px; z-index:1;
 }
-[data-controller-skin="f1"] #controlDeck,[data-controller-skin="f1"] #buttonCluster { display:contents; }
-[data-controller-skin="f1"] #shiftStack { position:absolute; top:0; left:0; width:132px; height:calc(100% - 140px); min-height:100px; gap:7px; }
-[data-controller-skin="f1"] #shiftStack .face-button { border-radius:18px; background:linear-gradient(145deg,#2b353f,#131b23); border:1px solid #76828e; box-shadow:inset 0 1px 1px #ffffff28,0 3px 5px #0008; padding:8px; grid-template-columns:34px minmax(0,1fr); }
-[data-controller-skin="f1"] #shiftStack .face-button::before { width:34px; height:34px; min-width:34px; font-size:25px; box-shadow:0 0 0 3px #0a1016,0 0 0 4px #87919c; }
-[data-controller-skin="f1"] #shiftStack .face-button span { font-size:17px; }
-[data-controller-skin="f1"] #shiftStack .face-note { font-size:9px; }
-[data-controller-skin="f1"] #gearUpBtn.pressed { background:#205b3d; }
-[data-controller-skin="f1"] #gearDownBtn.pressed { background:#244c79; }
-[data-controller-skin="f1"] #dpadRow { position:absolute; left:0; bottom:0; width:132px; height:132px; display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,44px); gap:0; }
-[data-controller-skin="f1"] #dpadRow .action-btn { border-radius:9px; border:1px solid #84909b; background:linear-gradient(145deg,#394550,#1b232c); font-size:23px; }
-[data-controller-skin="f1"] #dpadUpBtn { grid-column:2; grid-row:1; }
-[data-controller-skin="f1"] #dpadLeftBtn { grid-column:1; grid-row:2; }
-[data-controller-skin="f1"] #dpadRightBtn { grid-column:3; grid-row:2; }
-[data-controller-skin="f1"] #dpadDownBtn { grid-column:2; grid-row:3; }
-[data-controller-skin="f1"] #dpadRow::after { content:""; display:block; grid-column:2; grid-row:2; background:#171f27; border-radius:8px; border:1px solid #4b5965; width:auto; height:auto; position:static; }
-[data-controller-skin="f1"] #faceButtonRow { position:absolute; right:0; top:0; width:104px; height:calc(100% - 139px); display:grid; grid-template-columns:1fr; grid-template-rows:1fr 1fr; gap:7px; }
-[data-controller-skin="f1"] #faceButtonRow .face-button { border-radius:16px; padding:4px; display:grid; grid-template-columns:31px 1fr; grid-template-rows:1fr; gap:4px; align-items:center; background:linear-gradient(145deg,#2b353f,#131b23); border-color:#6e7a86; }
-[data-controller-skin="f1"] #faceButtonRow .face-button::before { width:31px; height:31px; min-width:31px; font-size:23px; grid-column:1; grid-row:1; box-shadow:0 0 0 2px #0a1016; }
-[data-controller-skin="f1"] #faceButtonRow .face-button span { grid-column:2; grid-row:1; font-size:12px; line-height:1.35; }
-[data-controller-skin="f1"] #faceButtonRow .face-note { display:none; }
-[data-controller-skin="f1"] #faceButtonRow #drsPitBtn span { font-size:12px; word-break:keep-all; line-height:1.3; }
-[data-controller-skin="f1"] #shoulderRow { position:absolute; right:0; bottom:0; width:104px; height:132px; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:6px; }
-[data-controller-skin="f1"] #lookLeftBtn { grid-column:1; grid-row:1; }
-[data-controller-skin="f1"] #lookRightBtn { grid-column:2; grid-row:1; }
-[data-controller-skin="f1"] #lookBackBtn { grid-column:1 / 3; grid-row:2; }
-[data-controller-skin="f1"] #shoulderRow .camera-button { border-radius:15px; background:linear-gradient(145deg,#2b353f,#131b23); border-color:#677786; }
-[data-controller-skin="f1"] #shoulderRow .camera-button small { display:none; }
-[data-controller-skin="f1"] #shoulderRow .camera-button span { font-size:11px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #controlDeck,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #buttonCluster { display:contents; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shiftStack { position:absolute; top:0; left:0; width:132px; height:calc(100% - 140px); min-height:100px; gap:7px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shiftStack .face-button { border-radius:18px; background:linear-gradient(145deg,#2b353f,#131b23); border:1px solid #76828e; box-shadow:inset 0 1px 1px #ffffff28,0 3px 5px #0008; padding:8px; grid-template-columns:34px minmax(0,1fr); }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shiftStack .face-button::before { width:34px; height:34px; min-width:34px; font-size:25px; box-shadow:0 0 0 3px #0a1016,0 0 0 4px #87919c; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shiftStack .face-button span { font-size:17px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shiftStack .face-note { font-size:9px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #gearUpBtn.pressed { background:#205b3d; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #gearDownBtn.pressed { background:#244c79; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #dpadRow { position:absolute; left:0; bottom:0; width:132px; height:132px; display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,44px); gap:0; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #dpadRow .action-btn { border-radius:9px; border:1px solid #84909b; background:linear-gradient(145deg,#394550,#1b232c); font-size:23px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #dpadUpBtn { grid-column:2; grid-row:1; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #dpadLeftBtn { grid-column:1; grid-row:2; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #dpadRightBtn { grid-column:3; grid-row:2; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #dpadDownBtn { grid-column:2; grid-row:3; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #dpadRow::after { content:""; display:block; grid-column:2; grid-row:2; background:#171f27; border-radius:8px; border:1px solid #4b5965; width:auto; height:auto; position:static; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #faceButtonRow { position:absolute; right:0; top:0; width:104px; height:calc(100% - 139px); display:grid; grid-template-columns:1fr; grid-template-rows:1fr 1fr; gap:7px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #faceButtonRow .face-button { border-radius:16px; padding:4px; display:grid; grid-template-columns:31px 1fr; grid-template-rows:1fr; gap:4px; align-items:center; background:linear-gradient(145deg,#2b353f,#131b23); border-color:#6e7a86; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #faceButtonRow .face-button::before { width:31px; height:31px; min-width:31px; font-size:23px; grid-column:1; grid-row:1; box-shadow:0 0 0 2px #0a1016; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #faceButtonRow .face-button span { grid-column:2; grid-row:1; font-size:12px; line-height:1.35; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #faceButtonRow .face-note { display:none; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #faceButtonRow #drsPitBtn span { font-size:12px; word-break:keep-all; line-height:1.3; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shoulderRow { position:absolute; right:0; bottom:0; width:104px; height:132px; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:6px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #lookLeftBtn { grid-column:1; grid-row:1; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #lookRightBtn { grid-column:2; grid-row:1; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #lookBackBtn { grid-column:1 / 3; grid-row:2; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shoulderRow .camera-button { border-radius:15px; background:linear-gradient(145deg,#2b353f,#131b23); border-color:#677786; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shoulderRow .camera-button small { display:none; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shoulderRow .camera-button span { font-size:11px; }
 
 /* A stationary, genuine data display. It never rotates with the small steering icon. */
-[data-controller-skin="f1"] #telemetryStrip { grid-column:2; grid-row:1; position:relative; width:100%; height:100%; padding:27px 10px 10px; display:grid; grid-template-columns:1fr 1.2fr; grid-template-rows:minmax(60px,1fr) 44px; gap:7px; border:2px solid #697580; border-radius:21px; background:radial-gradient(ellipse at 50% 0,#15242b,#050a0f 80%); box-shadow:0 0 0 4px #080d12,0 0 0 5px #8a939a,inset 0 3px 7px #000; }
-[data-controller-skin="f1"] .gear-card { grid-column:2; grid-row:1; align-self:center; text-align:center; padding:0; border:0; }
-[data-controller-skin="f1"] .gear-card .instrument-label { font-size:8px; color:#9aaab7; }
-[data-controller-skin="f1"] #gearIndicator { font-size:clamp(64px,calc(22 * var(--wheel-vh)),103px); line-height:1; color:#f6fbff; font-weight:850; font-variant-numeric:tabular-nums; }
-[data-controller-skin="f1"] #speedReadout { grid-column:1; grid-row:1; justify-self:center; align-self:center; font-size:clamp(27px,calc(9 * var(--wheel-vh)),44px); line-height:1; color:#fff; }
-[data-controller-skin="f1"] #speedReadout .unit { font-size:9px; letter-spacing:.16em; }
-[data-controller-skin="f1"] .rpm-instrument { position:static; display:contents; }
-[data-controller-skin="f1"] #rpmBarWrap { position:absolute; top:10px; left:11px; right:11px; width:auto; height:9px; }
-[data-controller-skin="f1"] #rpmLeds { gap:3px; }
-[data-controller-skin="f1"] .rpm-led { border-radius:50%; border-color:#59626b; }
-[data-controller-skin="f1"] .rpm-led:nth-child(n+11) { --led:#be70ff!important; }
-[data-controller-skin="f1"] .rpm-caption { grid-column:1; grid-row:2; align-self:center; display:flex; flex-direction:column; justify-content:center; gap:4px; font-size:10px; }
-[data-controller-skin="f1"] #shiftHint { font-size:8px; color:#ffa442; }
-[data-controller-skin="f1"] #drsIndicator { grid-column:2; grid-row:2; height:44px; min-height:44px; border-radius:7px; padding:3px; }
-[data-controller-skin="f1"] #drsIndicator b { font-size:17px; }
-[data-controller-skin="f1"] #drsState { font-size:8px; }
-[data-controller-skin="f1"] #instrumentRow { grid-column:2; grid-row:2; gap:5px; height:36px; }
-[data-controller-skin="f1"] #miniWheelWrap { display:none; }
-[data-controller-skin="f1"] .steering-center { display:flex; flex-direction:column; flex:0 0 63px; gap:3px; }
-[data-controller-skin="f1"] #miniAngle { font-size:15px; }
-[data-controller-skin="f1"] #steeringRange { font-size:7px; }
-[data-controller-skin="f1"] .steering-caption { font-size:7px; }
-[data-controller-skin="f1"] .steering-caption span:first-child:last-child { display:block; }
-[data-controller-skin="f1"] #steerLeftLimit,[data-controller-skin="f1"] #steerRightLimit { display:none; }
-[data-controller-skin="f1"] #topAuxButtons { z-index:2; left:var(--deck-left); top:10px; gap:5px; }
-[data-controller-skin="f1"] #topAuxButtons .action-btn { width:63px; min-width:0; height:44px; padding:4px; grid-template-columns:21px 1fr; column-gap:3px; border-radius:12px; }
-[data-controller-skin="f1"] #topAuxButtons .shoulder-button::before { width:21px; height:21px; min-width:21px; border-radius:50%; font-size:9px; color:#ffb255; background:#0c131a; border-color:#ff9b32; }
-[data-controller-skin="f1"] #topAuxButtons .shoulder-button span { font-size:10px; }
-[data-controller-skin="f1"] #topAuxButtons .shoulder-button small { font-size:6px; }
-[data-controller-skin="f1"] #driveTopBar .iconBtns { right:var(--deck-right); top:10px; gap:5px; }
-[data-controller-skin="f1"] #settingsBtn,[data-controller-skin="f1"] #gameMenuBtn { min-width:44px; width:49px; padding:5px; border-radius:12px; }
-[data-controller-skin="f1"] #settingsBtn span,[data-controller-skin="f1"] #gameMenuBtn span { display:none; }
-[data-controller-skin="f1"] #settingsBtn svg { width:22px; height:22px; }
-[data-controller-skin="f1"] #gameMenuBtn b { font-size:20px; }
-[data-controller-skin="f1"] #driveStatus { left:var(--deck-left); right:var(--deck-right); height:18px; bottom:max(3px,var(--wheel-safe-bottom)); z-index:2; }
-[data-controller-skin="f1"] .quickPedals button { height:clamp(64px,calc(23 * var(--wheel-vh)),96px); bottom:auto; top:18px; border-radius:22px; border:2px solid #b4bec8; box-shadow:0 0 0 4px #0b1016,inset 0 2px 3px #ffffff60; z-index:2; }
-[data-controller-skin="f1"] #fullBrakeBtn,[data-controller-skin="f1"] #brakeZone { left:max(12px,var(--wheel-safe-left)); }
-[data-controller-skin="f1"] #fullThrottleBtn,[data-controller-skin="f1"] #throttleZone { right:max(12px,var(--wheel-safe-right)); }
-[data-controller-skin="f1"] .quickPedals .quick-title { font-size:17px; }
-[data-controller-skin="f1"] .quickPedals small { font-size:7px; }
-[data-controller-skin="f1"] #brakeZone.analog,[data-controller-skin="f1"] #throttleZone.analog { bottom:calc(max(5px,var(--wheel-safe-bottom)) + 9px); height:calc(60 * var(--wheel-vh)); border:2px solid #9ca8b2; border-radius:22px; box-shadow:0 0 0 4px #0a1016,inset 0 1px 4px #ffffff50; padding-bottom:14px; z-index:2; }
-[data-controller-skin="f1"] #brakeZone.analog { background:#b9273d; }
-[data-controller-skin="f1"] #throttleZone.analog { background:#16bc7a; }
-[data-controller-skin="f1"] #brakeZone.analog .pedalFill { background:#ff5268; }
-[data-controller-skin="f1"] #throttleZone.analog .pedalFill { background:#5affaf; }
-[data-controller-skin="f1"] #dpadRow .action-btn.pressed,[data-controller-skin="f1"] #shoulderRow .camera-button.pressed { background:#ff9b31; color:#211409; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #telemetryStrip { grid-column:2; grid-row:1; position:relative; width:100%; height:100%; padding:27px 10px 10px; display:grid; grid-template-columns:1fr 1.2fr; grid-template-rows:minmax(60px,1fr) 44px; gap:7px; border:2px solid #697580; border-radius:21px; background:radial-gradient(ellipse at 50% 0,#15242b,#050a0f 80%); box-shadow:0 0 0 4px #080d12,0 0 0 5px #8a939a,inset 0 3px 7px #000; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .gear-card { grid-column:2; grid-row:1; align-self:center; text-align:center; padding:0; border:0; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .gear-card .instrument-label { font-size:8px; color:#9aaab7; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #gearIndicator { font-size:clamp(64px,calc(22 * var(--wheel-vh)),103px); line-height:1; color:#f6fbff; font-weight:850; font-variant-numeric:tabular-nums; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #speedReadout { grid-column:1; grid-row:1; justify-self:center; align-self:center; font-size:clamp(27px,calc(9 * var(--wheel-vh)),44px); line-height:1; color:#fff; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #speedReadout .unit { font-size:9px; letter-spacing:.16em; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .rpm-instrument { position:static; display:contents; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #rpmBarWrap { position:absolute; top:10px; left:11px; right:11px; width:auto; height:9px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #rpmLeds { gap:3px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .rpm-led { border-radius:50%; border-color:#59626b; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .rpm-led:nth-child(n+11) { --led:#be70ff!important; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .rpm-caption { grid-column:1; grid-row:2; align-self:center; display:flex; flex-direction:column; justify-content:center; gap:4px; font-size:10px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shiftHint { font-size:8px; color:#ffa442; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #drsIndicator { grid-column:2; grid-row:2; height:44px; min-height:44px; border-radius:7px; padding:3px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #drsIndicator b { font-size:17px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #drsState { font-size:8px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #instrumentRow { grid-column:2; grid-row:2; gap:5px; height:36px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #miniWheelWrap { display:none; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .steering-center { display:flex; flex-direction:column; flex:0 0 63px; gap:3px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #miniAngle { font-size:15px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #steeringRange { font-size:7px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .steering-caption { font-size:7px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .steering-caption span:first-child:last-child { display:block; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #steerLeftLimit,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #steerRightLimit { display:none; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #topAuxButtons { z-index:2; left:var(--deck-left); top:10px; gap:5px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #topAuxButtons .action-btn { width:63px; min-width:0; height:44px; padding:4px; grid-template-columns:21px 1fr; column-gap:3px; border-radius:12px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #topAuxButtons .shoulder-button::before { width:21px; height:21px; min-width:21px; border-radius:50%; font-size:9px; color:#ffb255; background:#0c131a; border-color:#ff9b32; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #topAuxButtons .shoulder-button span { font-size:10px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #topAuxButtons .shoulder-button small { font-size:6px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #driveTopBar .iconBtns { right:var(--deck-right); top:10px; gap:5px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #settingsBtn,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #gameMenuBtn { min-width:44px; width:49px; padding:5px; border-radius:12px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #settingsBtn span,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #gameMenuBtn span { display:none; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #settingsBtn svg { width:22px; height:22px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #gameMenuBtn b { font-size:20px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #driveStatus { left:var(--deck-left); right:var(--deck-right); height:18px; bottom:max(3px,var(--wheel-safe-bottom)); z-index:2; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .quickPedals button { height:clamp(64px,calc(23 * var(--wheel-vh)),96px); bottom:auto; top:18px; border-radius:22px; border:2px solid #b4bec8; box-shadow:0 0 0 4px #0b1016,inset 0 2px 3px #ffffff60; z-index:2; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #fullBrakeBtn,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #brakeZone { left:max(12px,var(--wheel-safe-left)); }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #fullThrottleBtn,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #throttleZone { right:max(12px,var(--wheel-safe-right)); }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .quickPedals .quick-title { font-size:17px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) .quickPedals small { font-size:7px; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #brakeZone.analog,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #throttleZone.analog { bottom:calc(max(5px,var(--wheel-safe-bottom)) + 9px); height:calc(60 * var(--wheel-vh)); border:2px solid #9ca8b2; border-radius:22px; box-shadow:0 0 0 4px #0a1016,inset 0 1px 4px #ffffff50; padding-bottom:14px; z-index:2; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #brakeZone.analog { background:#b9273d; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #throttleZone.analog { background:#16bc7a; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #brakeZone.analog .pedalFill { background:#ff5268; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #throttleZone.analog .pedalFill { background:#5affaf; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #dpadRow .action-btn.pressed,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shoulderRow .camera-button.pressed { background:#ff9b31; color:#211409; }
 @media (min-width:850px) and (orientation:landscape) {
- [data-controller-skin="f1"] #driveMid { grid-template-columns:140px minmax(0,1fr) 118px; gap:9px 13px; }
- [data-controller-skin="f1"] #shiftStack { width:140px; }
- [data-controller-skin="f1"] #faceButtonRow,[data-controller-skin="f1"] #shoulderRow { width:118px; }
- [data-controller-skin="f1"] #faceButtonRow .face-button span { font-size:14px; }
+ :is([data-controller-skin="f1"],[data-controller-skin="race"]) #driveMid { grid-template-columns:140px minmax(0,1fr) 118px; gap:9px 13px; }
+ :is([data-controller-skin="f1"],[data-controller-skin="race"]) #shiftStack { width:140px; }
+ :is([data-controller-skin="f1"],[data-controller-skin="race"]) #faceButtonRow,:is([data-controller-skin="f1"],[data-controller-skin="race"]) #shoulderRow { width:118px; }
+ :is([data-controller-skin="f1"],[data-controller-skin="race"]) #faceButtonRow .face-button span { font-size:14px; }
 }
 
+/* Sculpted wheel skin: shared controls, independently styled hardware surfaces. */
+#raceWheelArt,#raceDials { display:none; }
+.skin-panel { width:min(780px,100%); }
+#skinChoices { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.skin-option[data-skin-choice="race"] .skin-swatch { border-radius:16px 16px 23px 23px; box-shadow:inset 0 2px 0 #a6b0b9,inset 0 -3px 0 #ff951c; background:repeating-linear-gradient(45deg,#242a30 0 2px,#11171c 2px 4px); }
+.skin-option[data-skin-choice="race"] .skin-swatch i { width:45%; border-radius:5px; border:2px solid #8f9a9e; background:linear-gradient(#071116,#10242a); }
+#settingsPanel #anglePresets { grid-template-columns:repeat(3,minmax(0,1fr)); }
+[data-controller-skin="race"] #driveScreen { background:radial-gradient(ellipse at center,#1d252b,#030607 78%); }
+[data-controller-skin="race"] #driveScreen::before { display:none; }
+[data-controller-skin="race"] #raceWheelArt { display:block; position:absolute; top:0; bottom:max(1px,var(--wheel-safe-bottom)); left:max(1px,var(--wheel-safe-left)); right:max(1px,var(--wheel-safe-right)); pointer-events:none; }
+#raceWheelArt svg { width:100%; height:100%; overflow:visible; }
+[data-controller-skin="race"] #cockpitWordmark { color:#bfc7ce; text-shadow:0 1px #000; font-style:italic; }
+[data-controller-skin="race"] #telemetryStrip { margin-bottom:50px; height:calc(100% - 50px); border:2px solid #8b979d; border-radius:19px; background:linear-gradient(135deg,#071117,#020608 70%); box-shadow:0 0 0 4px #000,0 0 0 6px #4d555c,0 4px 0 7px #050809,inset 0 2px 12px #000; }
+[data-controller-skin="race"] #rpmBarWrap { height:9px; top:9px; }
+[data-controller-skin="race"] .rpm-led { border:1px solid #ffffff35; border-radius:50%; box-shadow:inset 0 2px 3px #0006; }
+[data-controller-skin="race"] .rpm-led.lit { box-shadow:0 0 6px var(--led),inset 0 1px 1px #ffffffaa; }
+[data-controller-skin="race"] #gearIndicator { font-size:clamp(56px,calc(19 * var(--wheel-vh)),90px); color:#f7fcff; text-shadow:0 0 1px #fff; }
+[data-controller-skin="race"] #speedReadout { font-family:ui-monospace,Menlo,Consolas,monospace; font-weight:850; letter-spacing:-.06em; }
+[data-controller-skin="race"] #drsIndicator { background:#0b1914; border-color:#446252; }
+[data-controller-skin="race"] #drsIndicator.active { background:#042b18; box-shadow:inset 0 0 0 1px #54ee8c,0 0 10px #2ad96530; }
+[data-controller-skin="race"] #instrumentRow { transform:translateY(-50px); }
+[data-controller-skin="race"] #shoulderRow { left:142px; right:114px; width:auto; height:44px; bottom:0; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:44px; gap:6px; }
+[data-controller-skin="race"] #lookLeftBtn { grid-column:1; grid-row:1; }
+[data-controller-skin="race"] #lookBackBtn { grid-column:2; grid-row:1; }
+[data-controller-skin="race"] #lookRightBtn { grid-column:3; grid-row:1; }
+[data-controller-skin="race"] #shoulderRow .camera-button { border-radius:22px; padding:3px 1px; gap:1px; background:radial-gradient(ellipse at 40% 10%,#46515a,#10181f 70%); box-shadow:inset 0 1px 1px #fff6,0 2px 0 2px #030709; border:1px solid #7a858e; }
+[data-controller-skin="race"] #shoulderRow .camera-button .look-icon { font-size:14px; line-height:12px; }
+[data-controller-skin="race"] #shoulderRow .camera-button span { font-size:10px; line-height:11px; }
+[data-controller-skin="race"] #shiftStack .face-button { border:0; border-radius:14px; background:radial-gradient(ellipse at 50% 40%,#ffffff08,transparent 70%); box-shadow:none; padding:3px; display:flex; flex-direction:column; gap:4px; justify-content:center; }
+[data-controller-skin="race"] #shiftStack .face-button::before { flex:0 0 auto; width:39px; height:39px; min-width:39px; border-radius:50%; font-size:28px; border:1px solid #ffffff88; box-shadow:inset 0 2px 3px #ffffff80,inset 0 -4px 6px #0007,0 0 0 3px #060b0e,0 0 0 4px #9ca7ad,0 3px 0 5px #000; }
+[data-controller-skin="race"] #shiftStack .face-button span { font-size:13px; letter-spacing:.02em; line-height:15px; text-shadow:0 1px #000; }
+[data-controller-skin="race"] #shiftStack .face-note { display:none; }
+[data-controller-skin="race"] #faceButtonRow { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:1fr; height:calc(100% - 140px); gap:4px; }
+[data-controller-skin="race"] #faceButtonRow .face-button { display:flex; flex-direction:column; justify-content:center; gap:10px; padding:0; background:none; border:0; box-shadow:none; }
+[data-controller-skin="race"] #faceButtonRow .face-button::before { width:39px; height:39px; min-width:39px; font-size:27px; border:1px solid #ffffff88; box-shadow:inset 0 2px 3px #ffffff80,inset 0 -4px 6px #0007,0 0 0 3px #060b0e,0 0 0 4px #9ca7ad,0 3px 0 5px #000; }
+[data-controller-skin="race"] #faceButtonRow .face-button span { font-size:10px; text-align:center; line-height:1.5; overflow-wrap:normal; }
+[data-controller-skin="race"] #faceButtonRow #drsPitBtn span { font-size:10px; }
+[data-controller-skin="race"] #faceButtonRow .face-button.pressed::before,[data-controller-skin="race"] #shiftStack .face-button.pressed::before { filter:brightness(1.35); box-shadow:inset 0 4px 7px #0008,0 0 0 3px #ff9319,0 0 8px var(--pad-color); }
+[data-controller-skin="race"] #topAuxButtons .action-btn { background:radial-gradient(ellipse at 30% 10%,#424b52,#0e151b); border-radius:22px; box-shadow:inset 0 1px 1px #ffffff65,0 2px 0 2px #030607; }
+[data-controller-skin="race"] #topAuxButtons .shoulder-button::before { background:#11171a; border-color:#ff9f32; box-shadow:inset 0 1px 2px #fff5,0 0 0 2px #000; }
+[data-controller-skin="race"] #settingsBtn,[data-controller-skin="race"] #gameMenuBtn { border-radius:50%; background:radial-gradient(ellipse at 40% 15%,#424b52,#0c1319 70%); border-color:#83919a; box-shadow:inset 0 1px 1px #fff5,0 2px 0 2px #030607; }
+[data-controller-skin="race"] #dpadRow .action-btn { border-radius:10px; background:linear-gradient(140deg,#4f5961,#1d242b 50%,#0c1117); box-shadow:inset 0 1px 2px #fff6,inset 0 -2px 3px #000,0 0 0 1px #070b0e; border-color:#849199; }
+[data-controller-skin="race"] #dpadRow::after { background:radial-gradient(ellipse at 50% 20%,#242d34,#0e151a); box-shadow:inset 0 -1px 1px #ff941c; }
+[data-controller-skin="race"] #brakeZone.analog,[data-controller-skin="race"] #throttleZone.analog { border:1px solid #9aa7b0; border-radius:22px 22px 36px 36px; background:linear-gradient(90deg,#080c11,#17202a 25%,#0c1318 75%,#04080d); box-shadow:0 0 0 4px #020508,0 1px 0 5px #77828b,inset 0 2px 5px #000; }
+[data-controller-skin="race"] #brakeZone .pedalLabel,[data-controller-skin="race"] #brakeZone .pct { color:#ff8188; }
+[data-controller-skin="race"] #throttleZone .pedalLabel,[data-controller-skin="race"] #throttleZone .pct { color:#7dffbd; }
+[data-controller-skin="race"] #brakeZone.analog .pedalFill { background:linear-gradient(90deg,#f53a4e,#ff6676 50%,#e83346); opacity:.84; }
+[data-controller-skin="race"] #throttleZone.analog .pedalFill { background:linear-gradient(90deg,#0bc86b,#69ffac 50%,#16db78); opacity:.9; }
+[data-controller-skin="race"] #brakeZone.analog::after,[data-controller-skin="race"] #throttleZone.analog::after { inset:9px 6px 9px; height:auto; border-radius:15px; opacity:.85; background:repeating-linear-gradient(0deg,transparent 0px,transparent 8px,#071017d9 8px,#071017d9 11px); }
+[data-controller-skin="race"] .pedalLabel,[data-controller-skin="race"] .pct { text-shadow:0 1px 3px #000!important; }
+[data-controller-skin="race"] .quickPedals button { border:1px solid #ffffff8c; border-radius:23px; box-shadow:inset 0 3px 3px #ffffff75,inset 0 -6px 10px #0005,0 0 0 4px #05090d,0 2px 0 5px #76838a; }
+[data-controller-skin="race"] #fullBrakeBtn { background:linear-gradient(130deg,#ff5965,#cd172b); }
+[data-controller-skin="race"] #fullThrottleBtn { background:linear-gradient(130deg,#5aff88,#04ab53); color:#072b17; }
+[data-controller-skin="race"] #raceDials { position:absolute; display:grid; right:0; bottom:0; width:104px; height:132px; grid-template-rows:1fr 1fr; gap:7px; }
+.race-dial { min-height:44px; border:0; background:none; padding:0; display:flex; align-items:center; justify-content:center; gap:7px; font-size:10px; }
+.race-dial i { display:block; flex:0 0 43px; height:43px; border-radius:50%; position:relative; background:repeating-conic-gradient(#aab5bc 0 2deg,#161e24 2deg 23deg); box-shadow:0 0 0 2px #02060a,0 0 0 3px #7d8b94; }
+.race-dial i::before { content:""; position:absolute; inset:5px; border:1px solid #89959d; border-radius:50%; background:linear-gradient(135deg,#48545d,#0b1116 70%); box-shadow:inset 0 1px 1px #fff8,0 2px 4px #000; }
+.race-dial i::after { content:""; position:absolute; top:6px; left:19px; height:16px; width:5px; border-radius:2px; background:#ff991e; transform:rotate(-22deg); transform-origin:50% 15px; box-shadow:0 0 2px #ffad3c; }
+.race-dial:active i { filter:brightness(1.3); }
+@media (min-width:850px) and (orientation:landscape) {
+ [data-controller-skin="race"] #raceDials { width:118px; }
+ [data-controller-skin="race"] #shoulderRow { left:153px; right:131px; }
+}
+
+#engineFeedbackState { display:none; }
+:is([data-controller-skin="f1"],[data-controller-skin="race"]) #engineFeedbackState { display:block; position:absolute; top:24px; left:5px; right:5px; text-align:center; font-size:7px; color:#8ea5b0; pointer-events:none; }
 </style>
 </head>
 <body>
@@ -1068,7 +1134,7 @@ button:focus-visible, [role="button"]:focus-visible {
     <div id="readout">
       <div id="angle">0<span>%</span></div>
       <div id="angleLabel" data-i18n="steeringLabel">Steering</div>
-      <div id="hint" data-i18n="hint">Hold your phone like a wheel (landscape), tap Start, then Calibrate to zero it.</div>
+      <div id="hint" data-i18n="hint">Hold the phone in landscape. Level with the ground is always the steering center.</div>
     </div>
   </main>
 
@@ -1084,6 +1150,27 @@ button:focus-visible, [role="button"]:focus-visible {
 
 <!-- ===================== DRIVE ===================== -->
 <div id="driveScreen">
+<div id="raceWheelArt" aria-hidden="true"><svg viewBox="0 0 1000 480" preserveAspectRatio="none">
+<defs>
+ <linearGradient id="raceMetal" x2="0.2" y2="1"><stop stop-color="#b3bcc1"/><stop offset=".13" stop-color="#26333b"/><stop offset=".45" stop-color="#0a1015"/><stop offset=".8" stop-color="#56616a"/><stop offset="1" stop-color="#111b21"/></linearGradient>
+ <linearGradient id="raceRubber" x2="1" y2=".3"><stop stop-color="#060b0f"/><stop offset=".32" stop-color="#333e45"/><stop offset=".65" stop-color="#131d23"/><stop offset="1" stop-color="#020609"/></linearGradient>
+ <pattern id="raceCarbon" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><rect width="9" height="9" fill="#0a1117"/><rect width="4.5" height="9" fill="#242d33"/><path d="M0 2h9M0 5h9M0 8h9" stroke="#ffffff08" stroke-width=".8"/></pattern>
+ <pattern id="raceDots" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r=".7" fill="#020509"/></pattern>
+ <radialGradient id="raceBolt"><stop stop-color="#384750"/><stop offset=".7" stop-color="#071017"/><stop offset="1" stop-color="#8a969d"/></radialGradient>
+ <g id="raceScrew"><circle r="6" fill="url(#raceBolt)"/><path d="m-2-2 4 4m-4 0 4-4" stroke="#8b9aa4" stroke-width="1"/></g>
+</defs>
+<path d="M25 19Q55 3 125 13L227 33Q280 47 330 42L670 42Q720 47 773 33L875 13Q945 3 975 19L993 75 990 400Q974 470 886 468L777 446Q730 438 680 456L320 456Q270 438 223 446L114 468Q26 470 10 400L7 75Z" fill="url(#raceMetal)" stroke="#87949c" stroke-width="1.3"/>
+<path d="M31 27Q60 12 125 23L227 43Q280 57 330 52L670 52Q720 57 773 43L875 23Q940 12 969 27L983 78 980 397Q966 460 886 458L777 436Q730 428 680 446L320 446Q270 428 223 436L114 458Q34 460 20 397L17 78Z" fill="url(#raceCarbon)" stroke="#020508" stroke-width="2"/>
+<path d="M41 28Q12 44 16 105L14 373Q18 438 80 455L114 446 126 379 116 291 125 214 113 117 121 30Z" fill="url(#raceRubber)" stroke="#66737b" stroke-width="2"/>
+<path d="M959 28Q988 44 984 105L986 373Q982 438 920 455L886 446 874 379 884 291 875 214 887 117 879 30Z" fill="url(#raceRubber)" stroke="#66737b" stroke-width="2"/>
+<path d="M41 28Q12 44 16 105L14 373Q18 438 80 455L114 446 126 379 116 291 125 214 113 117 121 30Z" fill="url(#raceDots)" opacity=".75"/>
+<path d="M959 28Q988 44 984 105L986 373Q982 438 920 455L886 446 874 379 884 291 875 214 887 117 879 30Z" fill="url(#raceDots)" opacity=".75"/>
+<path d="M23 72Q14 28 61 18M19 359q0 65 66 89M977 72q9-44-38-54M981 359q0 65-66 89" fill="none" stroke="#ff961c" stroke-width="5"/>
+<path d="M133 28q40 3 63 14M867 28q-40 3-63 14" fill="none" stroke="#ff9b26" stroke-width="3"/>
+<use href="#raceScrew" x="137" y="71"/><use href="#raceScrew" x="865" y="71"/>
+<use href="#raceScrew" x="145" y="420"/><use href="#raceScrew" x="855" y="420"/>
+<use href="#raceScrew" x="330" y="431"/><use href="#raceScrew" x="670" y="431"/>
+</svg></div>
   <div id="cockpitWordmark"><b>F1</b> RACE CONTROLLER</div>
   <div id="driveTopBar">
     <div id="driveStatus" role="button" tabindex="0" aria-label="查看完整连接状态" title="点击查看完整连接状态"><div id="statusDot2" class="live" style="width:8px;height:8px;border-radius:50%;background:var(--ok)"></div><span id="statusText2" aria-live="polite" data-i18n="driving">Driving</span></div>
@@ -1136,6 +1223,7 @@ button:focus-visible, [role="button"]:focus-visible {
       </div>
     </div>
     <div id="telemetryStrip" class="stale">
+      <div id="engineFeedbackState" aria-live="polite">背景等待遥测</div>
       <div class="gear-card"><div class="instrument-label">档位 / GEAR</div><div id="gearIndicator">—</div></div>
       <div class="rpm-instrument">
         <div id="rpmBarWrap"><div id="rpmBarFill"></div><div id="rpmLeds" aria-label="转速换挡灯"><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#32d78a"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#f04a5c"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i><i class="rpm-led" style="--led:#70a7ff"></i></div></div>
@@ -1146,7 +1234,11 @@ button:focus-visible, [role="button"]:focus-visible {
     </div>
     <div id="telemetryHint">等待游戏遥测 · 转向和踏板可正常使用</div>
 
-    <div id="controlDeck">
+    <div id="raceDials" role="group" aria-label="快捷设置">
+ <button id="raceSteerSettings" class="race-dial" type="button" aria-label="转向设置"><i aria-hidden="true"></i><span>转向<br>设置</span></button>
+ <button id="raceHapticSettings" class="race-dial" type="button" aria-label="震动设置"><i aria-hidden="true"></i><span>震动<br>设置</span></button>
+</div>
+<div id="controlDeck">
       <div id="shiftStack" role="group" aria-label="换挡与确认">
         <div id="gearUpBtn" class="face-button" role="button" tabindex="0" data-pad="A" aria-label="A，升挡或菜单确认"><span data-i18n="gearUp">升挡 ↑</span><small class="face-note" data-i18n="noteA">菜单确认</small></div>
         <div id="gearDownBtn" class="face-button" role="button" tabindex="0" data-pad="X" aria-label="X，降挡"><span data-i18n="gearDown">降挡 ↓</span><small class="face-note" data-i18n="noteX">辅助操作</small></div>
@@ -1196,9 +1288,9 @@ button:focus-visible, [role="button"]:focus-visible {
       <section class="menu-section" id="nativeSettingsSection"><div class="menu-section-title">连接与震动</div><div id="nativeSettingsGroup"><button id="skinSettingsBtn" type="button">方向盘皮肤</button></div></section>
       <section class="menu-section" id="steerSettingsSection"><div class="menu-section-title">满转向角度 · 单侧</div>
         <div id="anglePresets">
-          <button class="angle-preset" data-angle="45">45&deg;</button><button class="angle-preset" data-angle="60">60&deg;</button><button class="angle-preset" data-angle="90">90&deg;</button><button class="angle-preset" data-angle="120">120&deg;</button>
+          <button class="angle-preset" data-angle="30">30&deg;</button><button class="angle-preset" data-angle="45">45&deg;</button><button class="angle-preset" data-angle="60">60&deg;</button><button class="angle-preset" data-angle="90">90&deg;</button><button class="angle-preset" data-angle="120">120&deg;</button>
         </div>
-        <div id="menuCalibration"><button id="calBtn2" data-i18n="calibrate">校准中心</button><span id="calibrationNote">握稳后校准；开始驾驶时也会自动校准。</span></div>
+        <div id="menuCalibration"><button id="calBtn2" data-i18n="calibrate">校准中心</button><span id="calibrationNote">系统重力水平基准；无需手动找中心。</span></div>
       </section>
       <section class="menu-section" id="steeringAssistSection"><div class="menu-section-title">转向辅助</div>
         <div id="steeringAssistModes">
@@ -1230,8 +1322,8 @@ const STRINGS = {
   zh: {
     brand:'F1 Race Controller', notConnected:'未连接', connected:'已连接',
     connecting:'正在连接电脑…', connectionFailed:'连接失败，正在重试', motionDenied:'运动权限未允许',
-    steeringLabel:'转向', hint:'横屏握稳，开始时会短暂校准；请避免将手机完全平放。',
-    start:'开始驾驶', calibrate:'校准中心', invert:'反转转向', verifyWs:'检查连接页面',
+    steeringLabel:'转向', hint:'横屏握持，与地面水平时自动回中；请避免将手机完全平放。',
+    start:'开始驾驶', calibrate:'恢复水平基准', invert:'反转转向', verifyWs:'检查连接页面',
     driving:'驾驶中', gearDown:'降挡 ↓', gearUp:'升挡 ↑', drsPit:'DRS / 限速',
     overtake:'超车', lookBack:'向后看', radio:'无线电', mfd:'多功能屏',
     brake:'刹车', throttle:'油门', steeringAngleLabel:'转向角度（单侧）',
@@ -1249,9 +1341,9 @@ const STRINGS = {
     connectionFailed: 'Connection failed — tap Verify WS',
     motionDenied: 'Motion permission denied',
     steeringLabel: 'Steering',
-    hint: 'Hold your phone like a wheel (landscape), tap Start, then Calibrate to zero it.',
+    hint: 'Hold the phone in landscape. Level with the ground is always the steering center.',
     start: 'Start',
-    calibrate: 'Calibrate',
+    calibrate: 'Reset level reference',
     invert: 'Invert',
     verifyWs: 'Verify WS',
     driving: 'Driving',
@@ -1342,7 +1434,7 @@ document.querySelectorAll('.fullscreenBtn').forEach(btn => btn.innerHTML = ICON_
 /* ---------------------------------------------------------------------
  * Steering angle range (settings presets) and response shaping
  * ------------------------------------------------------------------- */
-const ANGLE_PRESETS = [45, 60, 90, 120];
+const ANGLE_PRESETS = [30, 45, 60, 90, 120];
 let maxAngleDeg = ANGLE_PRESETS.includes(parseFloat(localStorage.getItem('maxAngleDeg')))
   ? parseFloat(localStorage.getItem('maxAngleDeg'))
   : 90;
@@ -1474,7 +1566,7 @@ let lastGear = null;
 let lastDrsActive = false;
 let lastShiftBuzzAt = 0;
 
-let feedbackRoad = {speed:0, kerb:0, seenAt:0};
+let feedbackRoad = {speed:0,rpm:0,kerb:0,seenAt:0};
 let feedbackPaused = false;
 let settingsOpen = false;
 let detailsOpen = false;
@@ -1483,7 +1575,7 @@ let lastCurbImpactAt = 0;
 let lastFeedbackAt = 0;
 let lastFeedback = {intensity:0,sharpness:0,roughness:0};
 function stopRaceFeedback(preserveTelemetry=false) {
-  if (!preserveTelemetry) feedbackRoad = {speed:0,kerb:0,seenAt:0};
+  if (!preserveTelemetry) feedbackRoad = {speed:0,rpm:0,kerb:0,seenAt:0};
   lastFeedback = {intensity:0,sharpness:0,roughness:0};
   lastFeedbackAt = Date.now();
   if (typeof window.__nativeRaceFeedback==='function') window.__nativeRaceFeedback({...lastFeedback,stop:true});
@@ -1498,14 +1590,24 @@ function updateRaceFeedback(throttle, brake, force=false) {
   const kerb=allowed && now-feedbackRoad.seenAt<250 && feedbackRoad.speed>5 ? feedbackRoad.kerb : 0;
   // Native curb cues supply the road texture; avoid layering the old sharp rumble on top.
   const road=kerb>0 && typeof window.__nativeCurbImpact!=='function' ? Math.min(0.72, (0.34+0.09*kerb)*Math.min(1,feedbackRoad.speed/90)) : 0;
-  const background=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250 ? 0.20 : 0;
+  const fresh=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250;
+  const speedUnit=fresh?Math.min(1,finite(feedbackRoad.speed,0,500)/320):0;
+  const rpmUnit=fresh?Math.min(1,finite(feedbackRoad.rpm,0,20000)/15000):0;
+  const engine=rpmUnit>0 ? 0.06+0.14*rpmUnit : 0;
+  const background=fresh?Math.min(0.34,engine+0.14*Math.sqrt(speedUnit)):0;
+  const pulseHz=6+10*rpmUnit;
+
   const intensity=Math.min(0.9,background+Math.max(0.46*Math.sqrt(throttle),brake*0.4)+road);
-  const sharpness=road>0?0.18:brake>0?0.65:throttle>0?0.22:0.12;
-  const frame={intensity,sharpness,roughness:0};
-  const changed=Math.abs(frame.intensity-lastFeedback.intensity)>0.015 || frame.roughness!==lastFeedback.roughness || (intensity>0 && frame.sharpness!==lastFeedback.sharpness);
+  const sharpness=road>0?0.18:brake>0?0.65:throttle>0?0.22:(0.08+0.22*rpmUnit);
+  const frame={intensity,sharpness,roughness:0,pulseHz,engineTexture:intensity>0?0.30*background/intensity:0};
+  const engineStatus=document.getElementById('engineFeedbackState');
+  const engineText=!allowed?'背景反馈暂停':!fresh?'背景等待遥测':background>0?'背景路感 · 引擎 + 车速':'引擎停止 · 无行驶路感';
+  if(engineStatus && engineStatus.textContent!==engineText)engineStatus.textContent=engineText;
+  const changed=Math.abs(frame.intensity-lastFeedback.intensity)>0.015 || Math.abs(frame.pulseHz-(lastFeedback.pulseHz||6))>0.25 || frame.roughness!==lastFeedback.roughness || (intensity>0 && frame.sharpness!==lastFeedback.sharpness);
   if (!force && !changed && now-lastFeedbackAt<80) return;
   lastFeedbackAt=now; lastFeedback=frame;
   window.__nativeRaceFeedback(frame);
+
 }
 function refreshRaceFeedback(force=false) {
   const throttle=controls.fullThrottle ? 1 : throttlePedal.getValue();
@@ -1527,7 +1629,7 @@ const finite = (value, low, high) => Number.isFinite(Number(value)) ? Math.max(l
 function clearTelemetry() {
   resetSteeringAssistTelemetry();
   lastCurbImpactAt=0;
-  feedbackRoad = {speed:0,kerb:0,seenAt:0};
+  feedbackRoad = {speed:0,rpm:0,kerb:0,seenAt:0};
   telemetryStripEl.classList.add('stale');
   gearIndicatorEl.textContent = '—'; speedValueEl.textContent = '—'; rpmValueEl.textContent = '— RPM';
   rpmLeds.forEach(led=>led.classList.remove('lit')); rpmLedsEl.classList.remove('shift');
@@ -1540,10 +1642,10 @@ function onTelemetry(snapshot) {
   if (snapshot.valid !== true) { clearTelemetry(); refreshRaceFeedback(true); return; }
   telemetrySeenAt = Date.now();
   steeringAssistSpeed=finite(snapshot.spd,0,500); assistTelemetryAt=telemetrySeenAt;
-  feedbackRoad = {speed:finite(snapshot.spd,0,500),kerb:Array.isArray(snapshot.surfaceTypes)?snapshot.surfaceTypes.slice(0,4).filter(value=>value===1).length:0,seenAt:telemetrySeenAt};
+  feedbackRoad = {speed:finite(snapshot.spd,0,500),rpm:finite(snapshot.rpm,0,20000),kerb:Array.isArray(snapshot.surfaceTypes)?snapshot.surfaceTypes.slice(0,4).filter(value=>value===1).length:0,seenAt:telemetrySeenAt};
   if(document.hidden || !running || ws?.readyState!==WebSocket.OPEN) feedbackRoad.seenAt=0;
   // Start the background layer on this packet while retaining held pedal feedback.
-  refreshRaceFeedback();
+  refreshRaceFeedback(true);
   // Trigger an explicit impact before another asphalt sample can erase a short curb contact.
   if (feedbackRoad.kerb>0 && feedbackRoad.speed>5 && running && !document.hidden && !feedbackPaused && ws?.readyState===WebSocket.OPEN && telemetrySeenAt-lastCurbImpactAt>=300) {
     lastCurbImpactAt=telemetrySeenAt;
@@ -1585,6 +1687,8 @@ function onTelemetry(snapshot) {
   }
   lastGear=gear; lastDrsActive=drsActive;
 }
+// Independent of sensor motion and touch/display refresh, including the first idle frame.
+setInterval(()=>{if(controlsEnabled())refreshRaceFeedback();},80);
 setInterval(()=>{if(telemetrySeenAt && Date.now()-telemetrySeenAt>2200)clearTelemetry();},500);
 
 let currentStatusKey = 'notConnected';
@@ -1757,10 +1861,7 @@ function onMotion(event) {
   latestAx = g.x; latestAy = g.y;
   const raw = Math.atan2(g.x,-g.y)*180/Math.PI;
   const nextRoll = hasRollReading ? raw+Math.round((rollEstimate-raw)/360)*360 : raw;
-  if (gravitySuspended && hasRollReading && !autoCalibratePending) {
-    calibrationOffset += nextRoll-rollEstimate;
-    filterReady = false;
-  }
+  if (gravitySuspended) { filterReady=false; steeringRate=0; }
   gravitySuspended = false;
   const stamp = Number.isFinite(event.__nativeSampleTimestamp) ? event.__nativeSampleTimestamp*1000 :
     Number.isFinite(event.timeStamp) ? event.timeStamp : Date.now();
@@ -1770,14 +1871,10 @@ function onMotion(event) {
   const derivative = hasRollReading ? (nextRoll-rollEstimate)/dt : 0;
   steeringRate += (1-Math.exp(-2*Math.PI*2*dt))*(derivative-steeringRate);
   rollEstimate=nextRoll; hasRollReading=true; lastMotionStamp=stamp; lastMotionAt=Date.now();
-  if (autoCalibratePending) {
-    calibrationSamples.push(rollEstimate);
-    if (calibrationSamples.length<6) return;
-    calibrationOffset=calibrationSamples.reduce((a,b)=>a+b,0)/calibrationSamples.length;
-    calibrationSamples=[]; autoCalibratePending=false; filterReady=false; steeringRate=0;
-    document.getElementById('calibrationNote').textContent='已校准 · 当前握持姿势为转向中心';
-  }
-  const relative=rollEstimate-calibrationOffset;
+  // Landscape left/right share a physical horizontal zero. Wrapping preserves
+  // the sign around +/-180 degrees; no stored or learned grip offset is applied.
+  const landscapeBase = g.x >= 0 ? 90 : -90;
+  const relative = ((raw - landscapeBase + 540) % 360) - 180;
   if (!filterReady) { filteredRoll=relative; filterReady=true; }
   else {
     const gyroRate=Number.isFinite(event.rotationRate?.alpha)?Math.abs(event.rotationRate.alpha):0;
@@ -1793,9 +1890,9 @@ function onMotion(event) {
 }
 function currentRollDegrees() { return rollEstimate; }
 function calibrate() {
-  autoCalibratePending=true; calibrationSamples=[]; filterReady=false;
-  steerSmoothed=0; normalized=0;
-  document.getElementById('calibrationNote').textContent='正在校准…请握稳手机';
+  calibrationOffset=0;autoCalibratePending=false;calibrationSamples=[];
+  filterReady=false;steeringRate=0;
+  document.getElementById('calibrationNote').textContent='已使用系统重力水平基准 · 水平即回中';
 }
 
 function bindHold(el,onChange) {
@@ -1950,15 +2047,17 @@ async function start() {
     }
   }
   preferLandscape();
-  // Center against a short window of fresh samples after every start.
+  // Absolute level reference: starting tilted must retain the actual tilt.
   hasRollReading = false;
-  autoCalibratePending = true;
+  autoCalibratePending = false;
+  calibrationOffset = 0;
   calibrationSamples=[]; lastMotionStamp=0; lastMotionAt=0; steeringRate=0; filterReady=false; gravitySuspended=false;
   steerSmoothed = 0;
   normalized = 0;
   window.addEventListener('devicemotion', onMotion);
-  connect();
   running = true;
+  window.__nativePrepareFeedback?.();
+  connect();
   setupScreen.style.display = 'none';
   driveScreen.classList.add('active');
   sendFrame = requestAnimationFrame(sendLoop);
@@ -2069,6 +2168,7 @@ updateSteeringMeter(0);
 
 // A registry keeps presentation extensible while sharing a single input/telemetry model.
 const CONTROLLER_SKINS = Object.freeze([
+ {id:'race',name:'F1 立体座舱',description:'立体握把 · 实体圆键 · 嵌入式仪表'},
  {id:'f1',name:'F1 中央仪表',description:'蝶形面板 · 中央大屏 · 碳纤维与橙色细节'},
  {id:'classic',name:'经典控制台',description:'原有皮肤 · 横向仪表 · 明亮踏板'}
 ]);
@@ -2087,8 +2187,10 @@ for (const skin of CONTROLLER_SKINS) {
  button.append(swatch,title,description);button.addEventListener('click',()=>selectControllerSkin(skin.id));
  document.getElementById('skinChoices').append(button);
 }
-let savedControllerSkin='f1';try { savedControllerSkin=localStorage.getItem('controllerSkin')||'f1'; } catch (_) {}
+let savedControllerSkin='race';try { savedControllerSkin=localStorage.getItem('controllerSkin')||'race'; } catch (_) {}
 selectControllerSkin(savedControllerSkin);
+document.getElementById('raceSteerSettings').addEventListener('click',()=>{openSettings();document.getElementById('anglePresets').querySelector('button').focus();});
+document.getElementById('raceHapticSettings').addEventListener('click',()=>{openSettings();document.getElementById('nativeHapticSettings')?.click();});
 document.getElementById('skinSettingsBtn').addEventListener('click',()=>{skinPickerEl.classList.add('open');document.getElementById('closeSkinBtn').focus();});
 function closeSkinPicker(){skinPickerEl.classList.remove('open');document.getElementById('skinSettingsBtn').focus();}
 document.getElementById('closeSkinBtn').addEventListener('click',closeSkinPicker);

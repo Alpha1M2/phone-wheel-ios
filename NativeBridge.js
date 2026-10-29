@@ -33,6 +33,7 @@
   window.__nativeSteeringLimit = active => post({kind:'steeringLimit',active:!!active});
   window.__nativeCurbImpact = frame => post({kind:'curbImpact', ...frame});
   window.__nativeRaceFeedback = frame => post({kind:'raceFeedback', ...frame});
+  window.__nativePrepareFeedback = () => post({kind:'prepareHaptics'});
   window.__nativeShiftFeedback = () => {
     if(window.controlsEnabled?.()) post({kind:'shift'});
   };

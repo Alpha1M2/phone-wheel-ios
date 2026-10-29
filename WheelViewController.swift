@@ -33,6 +33,10 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private var feedbackIntensity: Float = 0
     private var feedbackSharpness: Float = 0
     private var feedbackRoughness: Float = 0
+    private var feedbackPulseHz = 6.0
+    private var feedbackEngineTexture: Float = 0
+    private var feedbackPulsePhase = 0.0
+    private var feedbackPhaseAt = 0.0
     private var socket: PinnedWebSocket?
     private var socketID: String?
     private var endpoint: URL?
@@ -190,6 +194,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         case "networkSettings": showConnectionSettings()
         case "hapticSettings": showHapticSettings()
         case "motion": startMotion()
+        case "prepareHaptics": prewarmHaptics()
         case "stopMotion": stopMotion()
         case "tap": playHaptic([12])
         case "shift": playShiftFeedback()
@@ -315,6 +320,9 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         feedbackIntensity = unit("intensity")
         feedbackSharpness = unit("sharpness")
         feedbackRoughness = unit("roughness")
+        let requestedHz = body["pulseHz"] as? Double ?? 6
+        feedbackPulseHz = requestedHz.isFinite ? min(16, max(6, requestedHz)) : 6
+        feedbackEngineTexture = unit("engineTexture")
         feedbackUpdatedAt = ProcessInfo.processInfo.systemUptime
         guard feedbackIntensity > 0.001 else { stopRaceFeedback(); return }
         do {
@@ -346,6 +354,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         try player.start(atTime: CHHapticTimeImmediate)
         feedbackPlayer = player
         feedbackStartedAt = ProcessInfo.processInfo.systemUptime
+        feedbackPhaseAt = feedbackStartedAt
     }
 
     private func renderRaceFeedback() {
@@ -361,9 +370,13 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
                 feedbackPlayer = nil
                 try startFeedbackPlayer()
             }
-            // A rumble-strip texture modulates continuous pedal resistance at 16 Hz.
-            let pulse = Float(0.5 + 0.5 * sin(now * 2 * Double.pi * 16))
-            let gain: Float = feedbackLayerGain(at: now) * feedbackIntensity * (1 - 0.65 * feedbackRoughness + 0.65 * feedbackRoughness * pulse)
+            // Integrate phase so an RPM change cannot jump the vibration waveform.
+            let elapsed = min(0.1, max(0, now - feedbackPhaseAt))
+            feedbackPulsePhase = (feedbackPulsePhase + elapsed * feedbackPulseHz * 2 * Double.pi).truncatingRemainder(dividingBy: 2 * Double.pi)
+            feedbackPhaseAt = now
+            let pulse = Float(0.5 + 0.5 * sin(feedbackPulsePhase))
+            let engineGain: Float = 1 - feedbackEngineTexture + feedbackEngineTexture * pulse
+            let gain: Float = feedbackLayerGain(at: now) * feedbackIntensity * engineGain * (1 - 0.65 * feedbackRoughness + 0.65 * feedbackRoughness * pulse)
             try feedbackPlayer?.sendParameters([
                 CHHapticDynamicParameter(parameterID: .hapticIntensityControl, value: gain, relativeTime: 0),
                 CHHapticDynamicParameter(parameterID: .hapticSharpnessControl, value: feedbackSharpness - 0.5, relativeTime: 0)
@@ -553,6 +566,7 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         try? feedbackPlayer?.stop(atTime: CHHapticTimeImmediate)
         feedbackPlayer = nil
         feedbackIntensity = 0
+        feedbackEngineTexture = 0; feedbackPulsePhase = 0; feedbackPhaseAt = 0
     }
 
     private func playHaptic(_ input: [Double], force: Bool = false) {
