@@ -1594,8 +1594,8 @@ function updateRaceFeedback(throttle, brake, force=false) {
   const fresh=allowed && feedbackRoad.seenAt>0 && now-feedbackRoad.seenAt<250;
   const speedUnit=fresh?Math.min(1,finite(feedbackRoad.speed,0,500)/320):0;
   const rpmUnit=fresh?Math.min(1,finite(feedbackRoad.rpm,0,20000)/15000):0;
-  const engine=rpmUnit>0 ? 0.06+0.14*rpmUnit : 0;
-  const background=fresh?Math.min(0.34,engine+0.14*Math.sqrt(speedUnit)):0;
+  const engine=rpmUnit>0 ? 0.14+0.14*rpmUnit : 0;
+  const background=fresh?Math.min(0.44,engine+0.16*Math.sqrt(speedUnit)):0;
   const pulseHz=6+10*rpmUnit;
 
   const intensity=Math.min(0.9,background+Math.max(0.46*Math.sqrt(throttle),brake*0.4)+road);
