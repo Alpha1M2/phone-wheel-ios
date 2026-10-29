@@ -1039,7 +1039,8 @@ button:focus-visible, [role="button"]:focus-visible {
 [data-controller-skin="race"] #driveScreen { background:radial-gradient(ellipse at center,#1d252b,#030607 78%); }
 [data-controller-skin="race"] #driveScreen::before { display:none; }
 [data-controller-skin="race"] #raceWheelArt { display:block; position:absolute; top:0; bottom:max(1px,var(--wheel-safe-bottom)); left:max(1px,var(--wheel-safe-left)); right:max(1px,var(--wheel-safe-right)); pointer-events:none; }
-#raceWheelArt svg { width:100%; height:100%; overflow:visible; }
+#raceWheelArt svg { display:block; width:100%; height:100%; overflow:visible; }
+.pedal-btn { transition:none; }
 [data-controller-skin="race"] #cockpitWordmark { color:#bfc7ce; text-shadow:0 1px #000; font-style:italic; }
 [data-controller-skin="race"] #telemetryStrip { margin-bottom:50px; height:calc(100% - 50px); border:2px solid #8b979d; border-radius:19px; background:linear-gradient(135deg,#071117,#020608 70%); box-shadow:0 0 0 4px #000,0 0 0 6px #4d555c,0 4px 0 7px #050809,inset 0 2px 12px #000; }
 [data-controller-skin="race"] #rpmBarWrap { height:9px; top:9px; }
