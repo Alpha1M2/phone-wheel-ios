@@ -48,11 +48,12 @@
     if (window.DeviceMotionEvent) DeviceMotionEvent.requestPermission = requestMotion;
     else window.DeviceMotionEvent = {requestPermission:requestMotion};
   } catch (_) { post({kind:'motion'}); }
-  window.__nativeMotion = (x,y,z,alpha,timestamp) => {
+  window.__nativeMotion = (x,y,z,alpha,timestamp,gyroAngle) => {
     const event = new Event('devicemotion');
     Object.defineProperty(event, 'accelerationIncludingGravity', {value:{x,y,z}});
     Object.defineProperty(event, 'rotationRate', {value:{alpha,beta:0,gamma:0}});
     Object.defineProperty(event, '__nativeSampleTimestamp', {value:timestamp});
+    if(Number.isFinite(gyroAngle)) Object.defineProperty(event, '__nativeGyroAngle', {value:gyroAngle});
     window.dispatchEvent(event);
   };
   document.addEventListener('pointerdown', event => {

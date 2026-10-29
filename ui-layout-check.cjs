@@ -95,7 +95,7 @@ async function main(){
             document.getElementById('nativeSettingsGroup').append(b);
           });
           await start();
-          const telemetry={valid:true,spd:247,gear:6,rpm:11300,rpmPct:84,rpmBits:4095,drs:false,statusValid:true,drsAllowed:true,drsDistance:0,surfaceTypes:[0,0,0,0]};
+          const telemetry={valid:true,spd:247,gear:6,rpm:11300,rpmPct:84,rpmBits:4095,drs:false,statusValid:true,drsAllowed:true,drsDistance:0,surfaceTypes:[0,0,0,0],pedalsValid:true,actualThrottle:1,actualBrake:0};
           onTelemetry(telemetry);
           window.__previewTelemetryTimer=setInterval(()=>{onTelemetry(telemetry);lastMotionAt=Date.now();filteredRoll=7;},50);
           autoCalibratePending=false;lastMotionAt=Date.now();filteredRoll=7;

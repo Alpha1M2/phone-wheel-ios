@@ -12,6 +12,9 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
     private let motion = CMMotionManager()
     private var motionDeliveryInFlight = false
     private var motionGeneration = 0
+    private var motionGyroAngle = 0.0
+    private var motionGyroAt = 0.0
+    private var motionPreviousRate = 0.0
     private var engine: CHHapticEngine?
     private var feedbackPlayer: CHHapticAdvancedPatternPlayer?
     private var curbPlayer: CHHapticPatternPlayer?
@@ -228,18 +231,31 @@ final class WheelViewController: UIViewController, WKScriptMessageHandler,
         motionGeneration += 1
         let generation = motionGeneration
         motionDeliveryInFlight = false
+        motionGyroAngle = 0; motionGyroAt = 0; motionPreviousRate = 0
         motion.deviceMotionUpdateInterval = 1.0 / 100.0
         UIApplication.shared.isIdleTimerDisabled = true
         // Fused gravity excludes linear acceleration; arbitrary heading avoids magnetic jumps.
         motion.startDeviceMotionUpdates(using: .xArbitraryZVertical, to: .main) { [weak self] sample, _ in
             guard let self = self, let sample = sample,
-                  self.motionGeneration == generation, !self.motionDeliveryInFlight,
-                  ProcessInfo.processInfo.systemUptime - sample.timestamp < 0.05 else { return }
+                  self.motionGeneration == generation else { return }
             let g = sample.gravity
             let rate = sample.rotationRate.z * 180.0 / Double.pi
             guard [g.x, g.y, g.z, rate, sample.timestamp].allSatisfy({ $0.isFinite }) else { return }
+            // Accumulate every sensor callback, including frames omitted while
+            // WebKit is busy. Body-Z rotation has opposite screen-angle sign.
+            if self.motionGyroAt > 0 {
+                let dt = sample.timestamp - self.motionGyroAt
+                guard dt > 0 else { return }
+                if dt <= 0.25 {
+                    self.motionGyroAngle -= (self.motionPreviousRate + rate) * 0.5 * dt
+                }
+            }
+            self.motionGyroAt = sample.timestamp
+            self.motionPreviousRate = rate
+            guard !self.motionDeliveryInFlight,
+                  ProcessInfo.processInfo.systemUptime - sample.timestamp < 0.05 else { return }
             self.motionDeliveryInFlight = true
-            self.web.evaluateJavaScript("window.__nativeMotion(\(g.x * 9.81),\(g.y * 9.81),\(g.z * 9.81),\(rate),\(sample.timestamp));") { [weak self] _, _ in
+            self.web.evaluateJavaScript("window.__nativeMotion(\(g.x * 9.81),\(g.y * 9.81),\(g.z * 9.81),\(rate),\(sample.timestamp),\(self.motionGyroAngle));") { [weak self] _, _ in
                 guard let self = self, self.motionGeneration == generation else { return }
                 self.motionDeliveryInFlight = false
             }

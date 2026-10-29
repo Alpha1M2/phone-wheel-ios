@@ -1106,6 +1106,9 @@ button:focus-visible, [role="button"]:focus-visible {
 
 #engineFeedbackState { display:none; }
 :is([data-controller-skin="f1"],[data-controller-skin="race"]) #engineFeedbackState { display:block; position:absolute; top:24px; left:5px; right:5px; text-align:center; font-size:7px; color:#8ea5b0; pointer-events:none; }
+.pedal-input-note { position:relative;z-index:2;display:block;font-size:8px;line-height:1.3;white-space:pre-line;text-align:center;margin-top:3px;color:inherit;font-weight:600; }
+.pedal-btn.analog { padding-bottom:8px!important; }
+[data-controller-skin="race"] .pedal-input-note { color:#d2e4e8; text-shadow:0 1px 2px #000; }
 </style>
 </head>
 <body>
@@ -1280,8 +1283,8 @@ button:focus-visible, [role="button"]:focus-visible {
       <button id="fullThrottleBtn" type="button" aria-label="RT，按住满油或菜单翻页，松手归零"><span class="quick-title">满油</span><small>RT · 菜单翻页</small></button>
       <button id="fullBrakeBtn" type="button" aria-label="LT，按住全刹车或菜单翻页，松手归零"><span class="quick-title">全刹车</span><small>LT · 菜单翻页</small></button>
     </div>
-  <div id="brakeZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="brake">Brake</span><span class="pct">0%</span></div>
-  <div id="throttleZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="throttle">Throttle</span><span class="pct">0%</span></div>
+  <div id="brakeZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="brake">Brake</span><span class="pct">0%</span><small class="pedal-input-note" id="brakeInputNote">输入 · 无遥测</small></div>
+  <div id="throttleZone" class="pedal-btn" role="button" tabindex="0"><div class="pedalFill"></div><span class="pedalLabel" data-i18n="throttle">Throttle</span><span class="pct">0%</span><small class="pedal-input-note" id="throttleInputNote">输入 · 无遥测</small></div>
 </div>
 
 
@@ -1303,7 +1306,7 @@ button:focus-visible, [role="button"]:focus-visible {
         <div id="anglePresets">
           <button class="angle-preset" data-angle="30">30&deg;</button><button class="angle-preset" data-angle="45">45&deg;</button><button class="angle-preset" data-angle="60">60&deg;</button><button class="angle-preset" data-angle="90">90&deg;</button><button class="angle-preset" data-angle="120">120&deg;</button>
         </div>
-        <div id="menuCalibration"><button id="calBtn2" data-i18n="calibrate">校准中心</button><span id="calibrationNote">系统重力水平基准；无需手动找中心。</span></div>
+        <div id="menuCalibration"><button id="calBtn2" data-i18n="calibrate">校准中心</button><span id="calibrationNote">开始和回中时自动校正水平；大角度陀螺仪连续跟踪。</span></div>
       </section>
       <section class="menu-section" id="steeringAssistSection"><div class="menu-section-title">转向辅助</div>
         <div id="steeringAssistModes">
@@ -1335,7 +1338,7 @@ const STRINGS = {
   zh: {
     brand:'F1 Race Controller', notConnected:'未连接', connected:'已连接',
     connecting:'正在连接电脑…', connectionFailed:'连接失败，正在重试', motionDenied:'运动权限未允许',
-    steeringLabel:'转向', hint:'横屏握持，与地面水平时自动回中；请避免将手机完全平放。',
+    steeringLabel:'转向', hint:'横屏开始时自动校正水平；大角度连续跟踪，接近回中时自动纠偏。',
     start:'开始驾驶', calibrate:'恢复水平基准', invert:'反转转向', verifyWs:'检查连接页面',
     driving:'驾驶中', gearDown:'降挡 ↓', gearUp:'升挡 ↑', drsPit:'DRS / 限速',
     overtake:'超车', lookBack:'向后看', radio:'无线电', mfd:'多功能屏',
@@ -1631,6 +1634,7 @@ function refreshRaceFeedback(force=false) {
 window.__nativeFeedbackReady=()=>{if(controlsEnabled())refreshRaceFeedback(true);};
 
 let telemetrySeenAt = 0;
+let actualPedals={valid:false,throttle:0,brake:0,seenAt:0};
 const rpmLeds = [...document.querySelectorAll('.rpm-led')];
 const rpmLedsEl = document.getElementById('rpmLeds');
 const rpmValueEl = document.getElementById('rpmValue');
@@ -1640,6 +1644,7 @@ const telemetryStripEl = document.getElementById('telemetryStrip');
 const telemetryHintEl = document.getElementById('telemetryHint');
 const finite = (value, low, high) => Number.isFinite(Number(value)) ? Math.max(low, Math.min(high, Number(value))) : 0;
 function clearTelemetry() {
+  actualPedals={valid:false,throttle:0,brake:0,seenAt:0};
   resetSteeringAssistTelemetry();
   lastCurbImpactAt=0;
   feedbackRoad = {speed:0,rpm:0,kerb:0,seenAt:0};
@@ -1654,6 +1659,9 @@ function clearTelemetry() {
 function onTelemetry(snapshot) {
   if (snapshot.valid !== true) { clearTelemetry(); refreshRaceFeedback(true); return; }
   telemetrySeenAt = Date.now();
+  actualPedals={valid:snapshot.pedalsValid===true && Number.isFinite(snapshot.actualThrottle) && Number.isFinite(snapshot.actualBrake),
+    throttle:finite(snapshot.actualThrottle,0,1),brake:finite(snapshot.actualBrake,0,1),seenAt:telemetrySeenAt};
+  renderPedalReadouts(controls.fullThrottle?1:throttlePedal.getValue(),controls.fullBrake?1:brakePedal.getValue());
   steeringAssistSpeed=finite(snapshot.spd,0,500); assistTelemetryAt=telemetrySeenAt;
   feedbackRoad = {speed:finite(snapshot.spd,0,500),rpm:finite(snapshot.rpm,0,20000),kerb:Array.isArray(snapshot.surfaceTypes)?snapshot.surfaceTypes.slice(0,4).filter(value=>value===1).length:0,seenAt:telemetrySeenAt};
   if(document.hidden || !running || ws?.readyState!==WebSocket.OPEN) feedbackRoad.seenAt=0;
@@ -1774,13 +1782,23 @@ function releaseAllInputs(preserveTelemetry=false) {
 function resetQuickPedals() { releaseAllInputs(); }
 
 function renderPedalReadouts(throttle, brake) {
-  throttlePct.textContent = Math.round(throttle * 100) + '%';
-  brakePct.textContent = Math.round(brake * 100) + '%';
-  document.querySelector('#throttleZone .pedalFill').style.height = throttle * 100 + '%';
-  document.querySelector('#brakeZone .pedalFill').style.height = brake * 100 + '%';
-  document.getElementById('throttleZone').classList.toggle('pressed',throttle>0.01);
-  document.getElementById('brakeZone').classList.toggle('pressed',brake>0.01);
+  const fresh=running && !document.hidden && ws?.readyState===WebSocket.OPEN &&
+    actualPedals.valid && Date.now()-actualPedals.seenAt<500;
+  const displayedThrottle=fresh?actualPedals.throttle:throttle;
+  const displayedBrake=fresh?actualPedals.brake:brake;
+  throttlePct.textContent=Math.round(displayedThrottle*100)+'%';
+  brakePct.textContent=Math.round(displayedBrake*100)+'%';
+  document.querySelector('#throttleZone .pedalFill').style.height=displayedThrottle*100+'%';
+  document.querySelector('#brakeZone .pedalFill').style.height=displayedBrake*100+'%';
+  for(const [id,value] of [['throttle',throttle],['brake',brake]]) {
+    const zone=document.getElementById(id+'Zone');
+    zone.classList.toggle('pressed',value>0.01);
+    zone.classList.toggle('actual-feedback',fresh);
+    const note=document.getElementById(id+'InputNote');
+    if(note)note.textContent=(fresh?'游戏实际':'输入 · 无遥测')+'\n输入 '+Math.round(value*100)+'%';
+  }
 }
+
 function sendImmediatePedals() {
   const throttle = controls.fullThrottle ? 1 : throttlePedal.getValue();
   const brake = controls.fullBrake ? 1 : brakePedal.getValue();
@@ -1850,7 +1868,7 @@ window.__nativeReconnect = () => {
   else start();
 };
 
-/* Fused gravity steering, unwrapped angles, short calibration and adaptive filtering. */
+/* Fixed landscape reference + continuous gyro; gravity only levels the center. */
 let rollEstimate = 0;
 let hasRollReading = false;
 let autoCalibratePending = false;
@@ -1861,51 +1879,84 @@ let steeringRate = 0;
 let filteredRoll = 0;
 let filterReady = false;
 let gravitySuspended = false;
+let landscapeLevelBase = null;
+let lastNativeGyroAngle = null;
+let previousScreenRate = 0;
+let lastGravityRaw = null;
 
-function onMotion(event) {
-  const g = event.accelerationIncludingGravity;
-  if (!g || !Number.isFinite(g.x) || !Number.isFinite(g.y)) return;
-  const z = Number.isFinite(g.z) ? g.z : 0;
-  const magnitude = Math.hypot(g.x,g.y,z);
-  if (magnitude < 0.01 || Math.hypot(g.x,g.y)/magnitude < 0.15) {
-    // Almost flat: the gravity angle is undefined. Do not amplify sensor noise.
-    gravitySuspended = true; lastMotionAt = 0; return;
-  }
-  latestAx = g.x; latestAy = g.y;
-  const raw = Math.atan2(g.x,-g.y)*180/Math.PI;
-  const nextRoll = hasRollReading ? raw+Math.round((rollEstimate-raw)/360)*360 : raw;
-  if (gravitySuspended) { filterReady=false; steeringRate=0; }
-  gravitySuspended = false;
-  const stamp = Number.isFinite(event.__nativeSampleTimestamp) ? event.__nativeSampleTimestamp*1000 :
-    Number.isFinite(event.timeStamp) ? event.timeStamp : Date.now();
-  const gap = lastMotionStamp ? (stamp-lastMotionStamp)/1000 : 1/60;
-  const dt = Math.max(1/240,Math.min(0.1,gap>0?gap:1/60));
-  if (gap>0.25) { filterReady=false; steeringRate=0; }
-  const derivative = hasRollReading ? (nextRoll-rollEstimate)/dt : 0;
-  steeringRate += (1-Math.exp(-2*Math.PI*2*dt))*(derivative-steeringRate);
-  rollEstimate=nextRoll; hasRollReading=true; lastMotionStamp=stamp; lastMotionAt=Date.now();
-  // Landscape left/right share a physical horizontal zero. Wrapping preserves
-  // the sign around +/-180 degrees; no stored or learned grip offset is applied.
-  const landscapeBase = g.x >= 0 ? 90 : -90;
-  const relative = ((raw - landscapeBase + 540) % 360) - 180;
-  if (!filterReady) { filteredRoll=relative; filterReady=true; }
-  else {
-    const gyroRate=Number.isFinite(event.rotationRate?.alpha)?Math.abs(event.rotationRate.alpha):0;
-    const cutoff=Math.min(60,14+0.2*Math.max(Math.abs(steeringRate),gyroRate));
-    filteredRoll+=(1-Math.exp(-2*Math.PI*cutoff*dt))*(relative-filteredRoll);
-  }
-  // Send a fresh axis with the current pedal state; do not wait for display refresh.
-  updateSteeringValue();
-  if (running && !document.hidden) {
-    sendControlSnapshot(controls.fullThrottle?1:throttlePedal.getValue(),
-                        controls.fullBrake?1:brakePedal.getValue());
-  }
-}
-function currentRollDegrees() { return rollEstimate; }
-function calibrate() {
+function resetHybridMotion() {
+  landscapeLevelBase=null;lastNativeGyroAngle=null;previousScreenRate=0;lastGravityRaw=null;
+  hasRollReading=false;rollEstimate=0;filteredRoll=0;filterReady=false;
+  lastMotionStamp=0;lastMotionAt=0;steeringRate=0;gravitySuspended=false;
   calibrationOffset=0;autoCalibratePending=false;calibrationSamples=[];
-  filterReady=false;steeringRate=0;
-  document.getElementById('calibrationNote').textContent='已使用系统重力水平基准 · 水平即回中';
+}
+function wrapSteeringAngle(angle) { return ((angle+540)%360)-180; }
+function onMotion(event) {
+  const g=event.accelerationIncludingGravity;
+  if(!g || !Number.isFinite(g.x) || !Number.isFinite(g.y))return;
+  const z=Number.isFinite(g.z)?g.z:0,magnitude=Math.hypot(g.x,g.y,z);
+  if(magnitude<0.01)return;
+  const projection=Math.hypot(g.x,g.y)/magnitude;
+  const gravityValid=projection>=0.20;
+  const raw=gravityValid?Math.atan2(g.x,-g.y)*180/Math.PI:null;
+  const stamp=Number.isFinite(event.__nativeSampleTimestamp)?event.__nativeSampleTimestamp*1000:
+    Number.isFinite(event.timeStamp)?event.timeStamp:Date.now();
+  if(lastMotionStamp && stamp<=lastMotionStamp)return;
+  const gap=lastMotionStamp?(stamp-lastMotionStamp)/1000:0;
+  const nativeAngle=Number.isFinite(event.__nativeGyroAngle)?event.__nativeGyroAngle:null;
+  // Core Motion body-Z rotation is the negative of the gravity-screen angle.
+  const rate=Number.isFinite(event.rotationRate?.alpha)?-event.rotationRate.alpha:0;
+  if(!hasRollReading) {
+    // A near-flat phone cannot supply a reliable level. Wait for an observable
+    // gravity direction once, then retain this landscape side throughout driving.
+    if(!gravityValid)return;
+    landscapeLevelBase=g.x>=0?90:-90;
+    rollEstimate=wrapSteeringAngle(raw-landscapeLevelBase);
+    hasRollReading=true;filterReady=false;
+  } else {
+    if(gap>0.25) {
+      // Discard an old gyro interval; reacquire the same fixed level, on the
+      // nearest continuous turn, rather than adopting the current grip as zero.
+      if(!gravityValid){lastMotionAt=0;lastMotionStamp=stamp;lastNativeGyroAngle=nativeAngle;return;}
+      const level=wrapSteeringAngle(raw-landscapeLevelBase);
+      rollEstimate=level+Math.round((rollEstimate-level)/360)*360;
+      filterReady=false;
+    } else if(nativeAngle!==null && lastNativeGyroAngle!==null) {
+      rollEstimate+=nativeAngle-lastNativeGyroAngle;
+    } else if(gravityValid && lastGravityRaw!==null) {
+      // Browser fallback has no native integrated gyro. Preserve continuous
+      // fused-sensor angle instead of changing the landscape base at 90 degrees.
+      rollEstimate+=wrapSteeringAngle(raw-lastGravityRaw);
+    } else if(gap>0) {
+      rollEstimate+=(previousScreenRate+rate)*0.5*gap;
+    }
+    if(gravityValid) {
+      const level=wrapSteeringAngle(raw-landscapeLevelBase);
+      const measured=level+Math.round((rollEstimate-level)/360)*360;
+      // Softly correct bias only near the genuine horizontal zero. Both gates
+      // prevent gravity from pulling a large-angle turn toward the opposite side.
+      if(Math.abs(measured)<15 && Math.abs(rollEstimate)<24) {
+        const strength=1-Math.min(1,Math.abs(measured)/15);
+        const correction=(1-Math.exp(-Math.min(gap,0.05)*strength/0.16));
+        rollEstimate+=(measured-rollEstimate)*correction;
+        if(Math.abs(measured)<0.35 && Math.abs(rollEstimate)<2 && Math.abs(rate)<5)rollEstimate=measured;
+      }
+    }
+  }
+  latestAx=g.x;latestAy=g.y;
+  lastMotionStamp=stamp;lastMotionAt=Date.now();lastNativeGyroAngle=nativeAngle;
+  previousScreenRate=rate;lastGravityRaw=raw;gravitySuspended=!gravityValid;
+  steeringRate=rate;
+  // No second angle low-pass on the large-angle path; each fresh gyro sample
+  // reaches the virtual stick immediately, including a held full-lock turn.
+  filteredRoll=rollEstimate;filterReady=true;
+  updateSteeringValue();
+  if(running && !document.hidden)sendControlSnapshot(controls.fullThrottle?1:throttlePedal.getValue(),controls.fullBrake?1:brakePedal.getValue());
+}
+function currentRollDegrees(){return rollEstimate;}
+function calibrate(){
+  resetHybridMotion();
+  document.getElementById('calibrationNote').textContent='下个有效姿态恢复水平基准 · 大角度由陀螺仪连续跟踪';
 }
 
 function bindHold(el,onChange) {
@@ -2060,11 +2111,7 @@ async function start() {
     }
   }
   preferLandscape();
-  // Absolute level reference: starting tilted must retain the actual tilt.
-  hasRollReading = false;
-  autoCalibratePending = false;
-  calibrationOffset = 0;
-  calibrationSamples=[]; lastMotionStamp=0; lastMotionAt=0; steeringRate=0; filterReady=false; gravitySuspended=false;
+  resetHybridMotion();
   steerSmoothed = 0;
   normalized = 0;
   window.addEventListener('devicemotion', onMotion);
@@ -2089,8 +2136,7 @@ function stop() {
   Object.keys(controls).forEach(key => controls[key] = false);
   if (ws?.readyState === WebSocket.OPEN) ws.send('{}');
   window.removeEventListener('devicemotion', onMotion);
-  rollEstimate = 0;
-  hasRollReading = false;
+  resetHybridMotion();
   steerSmoothed = 0;
   driveScreen.classList.remove('active');
   setupScreen.style.display = 'grid';
